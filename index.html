@@ -3,9 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="theme-color" content="#183b66" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="衣類仕分け" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
 <title>衣類仕分けコンベア</title>
 <style>
 :root{
@@ -202,6 +206,39 @@ body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
   -webkit-touch-callout:none;
 }
 
+
+/* ===== iPhone PWA / standalone mode ===== */
+html,body{
+  min-height:100%;
+  min-height:100dvh;
+  background:#eef2f7;
+}
+body{
+  padding-top:env(safe-area-inset-top);
+  padding-right:env(safe-area-inset-right);
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-left:env(safe-area-inset-left);
+}
+@media (display-mode: standalone){
+  .topbar{
+    padding-top:max(10px, env(safe-area-inset-top));
+  }
+}
+.standalone-hint{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#eef6ff;
+  border:1px solid #cfe0f5;
+  color:#294a72;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.5;
+}
+@media (display-mode: standalone){
+  .standalone-hint{display:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -261,6 +298,7 @@ body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
         </div>
       </div>
       <button type="button" class="start-btn" id="startBtn">ゲーム開始</button>
+<div class="standalone-hint" id="standaloneHint">Safariの「共有」→「ホーム画面に追加」から起動すると、ブラウザの上下バーなしでアプリのように全画面で遊べます。</div>
       <div class="tip">2人対戦は、端末をテーブル中央に置き、向かい合って遊ぶ想定です。CPU対戦では自分が下側、CPUが上側です。スマホはタッチ操作対応です。iPhone Safari向けにtouch・pointer・clickの3系統へ対応しています。横向きにするとより遊びやすくなります。終了宣言後も、まだ宣言していない相手は時間切れまで続行できます。</div>
     </div>
   </section>
@@ -528,6 +566,13 @@ function loadLogs(){
 function saveLogs(logs){
   try{localStorage.setItem(LOG_KEY,JSON.stringify(logs))}catch(e){}
   updateLogUi();
+
+function runningStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+}
+const standaloneHint=document.getElementById('standaloneHint');
+if(standaloneHint && runningStandalone())standaloneHint.classList.add('hidden');
+
 }
 function nowIso(){return new Date().toISOString()}
 function makeId(prefix='s'){
