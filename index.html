@@ -64,7 +64,7 @@ button{touch-action:manipulation}
 .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.act{border:0;border-radius:13px;padding:10px 5px;font-weight:1000;color:#fff;box-shadow:inset 0 -2px rgba(0,0,0,.12);min-height:44px}.act:active{transform:translateY(1px)}.p1{background:var(--green)}.p2{background:var(--purple)}.p3{background:var(--black)}.skip{background:#7b8497}.finish{grid-column:1/-1;background:#e37819}.finish[disabled],.act[disabled]{opacity:.38;filter:grayscale(.3)}.finish.ready{background:#d24732;animation:pulse 1s infinite alternate}@keyframes pulse{from{box-shadow:0 0 0 0 rgba(210,71,50,.2)}to{box-shadow:0 0 0 7px rgba(210,71,50,.08)}}
 
 .center-zone{padding:8px 14px;display:grid;grid-template-columns:minmax(90px,120px) minmax(310px,650px) minmax(90px,120px);align-items:center;gap:12px;background:#e9eef5;border-top:1px solid #d7dde7;border-bottom:1px solid #d7dde7;min-height:190px;position:relative;z-index:5}
-.timer-box{text-align:center}.timer{font-size:48px;font-weight:1000;font-variant-numeric:tabular-nums;line-height:1}.timer-label{font-size:11px;color:#687287;font-weight:900}.set-score{font-size:12px;font-weight:900;margin-top:6px;color:#4e5a72}
+.timer-box{text-align:center}.timer{font-size:48px;font-weight:1000;font-variant-numeric:tabular-nums;line-height:1}.timer-label{font-size:11px;color:#687287;font-weight:900}.timer-box.preview .timer{color:#d97706}.timer-box.preview .timer-label{color:#b45309}.prep-message{font-size:13px;line-height:1.5;text-align:center}.prep-message b{display:block;font-size:28px;color:#d97706;margin-top:3px}.set-score{font-size:12px;font-weight:900;margin-top:6px;color:#4e5a72}
 .prompt-wrap{display:flex;justify-content:center}
 .prompt-stack{display:flex;flex-direction:column;align-items:center;gap:8px;width:min(100%,620px)}
 .prompt-side-label{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:120px;padding:6px 18px;border-radius:999px;font-size:14px;font-weight:1000;color:#183b66;background:#dbeafb;box-shadow:0 2px 0 rgba(24,59,102,.08)}
@@ -195,6 +195,13 @@ body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
   .timer{font-size:30px}
 }
 
+
+.act,.claim-half{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+
 </style>
 </head>
 <body>
@@ -242,7 +249,7 @@ body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
             <label class="choice cpu-normal"><input type="radio" name="cpuDifficulty" value="normal" checked><span>ふつう</span></label>
             <label class="choice cpu-hard"><input type="radio" name="cpuDifficulty" value="hard"><span>むずかしい</span></label>
           </div>
-          <div class="cpu-note" id="cpuDifficultyNote">ふつう：そこそこ速く、高得点も狙います。</div>
+          <div class="cpu-note" id="cpuDifficultyNote">ふつう：少し考えながら、高得点も狙います。</div>
         </div>
         <div class="setup-box" style="grid-column:1/-1">
           <h3>使うお題</h3>
@@ -253,7 +260,7 @@ body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
           </div>
         </div>
       </div>
-      <button type="button" class="start-btn" id="startBtn" ontouchend="if(window.__clothingSortStart){event.preventDefault();window.__clothingSortStart();}" onclick="if(window.__clothingSortStart){window.__clothingSortStart();}">ゲーム開始</button>
+      <button type="button" class="start-btn" id="startBtn">ゲーム開始</button>
       <div class="tip">2人対戦は、端末をテーブル中央に置き、向かい合って遊ぶ想定です。CPU対戦では自分が下側、CPUが上側です。スマホはタッチ操作対応です。iPhone Safari向けにtouch・pointer・clickの3系統へ対応しています。横向きにするとより遊びやすくなります。終了宣言後も、まだ宣言していない相手は時間切れまで続行できます。</div>
     </div>
   </section>
@@ -320,13 +327,13 @@ body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
   <ol class="rule-list">
     <li>各プレイヤーは同じ構成の27枚を持ち、山札の一番上1枚だけを見ます。お題カードは上側が相手向け、下側が自分向けの表示です。</li>
     <li>そのカードが条件を満たす1点・2点・3点のどこかへ配置します。複数に該当する場合は、どこへ置いても構いません。</li>
-    <li>一度置いたカードは動かせません。迷ったカードは「底へ」で山札の一番下へ送れます。</li>
+    <li>一度置いたカードは動かせません。迷ったカードは「底へ」で山札の一番下へ送れます。底送りしたカードは山札から消えず、一周して再び一番上に来たらもう一度選べます。</li>
     <li>正解はレーンの点数。誤配置はそのカードが<strong>−2点</strong>。未配置は0点です。</li>
-    <li>通常45秒。上級は30秒。CPU対戦では「かんたん／ふつう／むずかしい」からCPUの速さ・正確さ・高得点狙いの強さを選べます。</li>
+    <li>各セット開始時に5秒間、お題だけを見る時間があります。その後、通常45秒・上級30秒で仕分け開始です。CPU対戦では「かんたん／ふつう／むずかしい」からCPUの速さ・正確さ・高得点狙いの強さを選べます。</li>
     <li>終了するときは、未配置カードを山札側へ戻して手を離す → <strong>「仕分け終了！」</strong> → 中央の給料ボーナストークンを取る、の順です。Web版では終了ボタンを押すと未配置カードを自動的に山札へ戻し、操作をロックします。</li>
     <li>宣言順ではなく、正しい終了後に<strong>先にトークンを取った人が＋3点</strong>。上半分がA、下半分がBのトークン取得ボタンです。</li>
     <li>相手が終了しても、まだ宣言していないプレイヤーは時間切れまで続けられます。</li>
-    <li>セットは合計得点が高い方が獲得。同点は誤配置の少ない方。それも同じなら引き分け。2セット先取で勝利です。</li><li>Web版はプレイログをブラウザ内に保存できます。上部の「ログ」からJSON/CSVを書き出せます。</li>
+    <li>セットは合計得点が高い方が獲得。同点は誤配置の少ない方。それも同じなら引き分け。2セット先取で勝利です。</li><li>Web版はプレイログをブラウザ内に保存できます。上部の「ログ」からJSON/CSVを書き出せます。仕分けボタンは短いタップのみ反応し、長押しや画面を動かすドラッグ操作では反応しません。</li>
   </ol>
   <button type="button" class="start-btn" id="closeRules">閉じる</button>
 </div></div>
@@ -360,30 +367,30 @@ const DIFF_LABEL={green:'緑',purple:'紫',black:'黒'};
 const CPU_PROFILE={
   easy:{
     label:'かんたん',
-    thinkMin:1250,thinkMax:1950,
-    mistakeRate:.16,
-    highScoreBias:.30,
+    thinkMin:1400,thinkMax:2150,
+    mistakeRate:.18,
+    highScoreBias:.26,
     finishDeck:4,
     finishTime:5,
-    claimMin:520,claimMax:900
+    claimMin:620,claimMax:1000
   },
   normal:{
     label:'ふつう',
-    thinkMin:850,thinkMax:1350,
-    mistakeRate:.07,
-    highScoreBias:.68,
+    thinkMin:1000,thinkMax:1500,
+    mistakeRate:.09,
+    highScoreBias:.60,
     finishDeck:2,
     finishTime:6,
-    claimMin:260,claimMax:520
+    claimMin:340,claimMax:650
   },
   hard:{
     label:'むずかしい',
-    thinkMin:520,thinkMax:880,
-    mistakeRate:.025,
-    highScoreBias:.92,
+    thinkMin:650,thinkMax:1000,
+    mistakeRate:.04,
+    highScoreBias:.84,
     finishDeck:1,
     finishTime:7,
-    claimMin:110,claimMax:260
+    claimMin:170,claimMax:330
   }
 };
 
@@ -506,7 +513,7 @@ function renderCard(card){
     <div class="card-bottom"><div class="attr"><div class="mini">${crayonHtml(card.color)}</div>${JP_COLOR[card.color]}</div><div class="attr"><div class="mini">${miniTypeHtml(card.type)}</div>${JP_TYPE[card.type]}</div><div class="attr"><div class="mini">${patternHtml(card.pattern)}</div>${JP_PATTERN[card.pattern]}</div></div>`;
 }
 
-const state={mode:'versus',duration:45,timeLeft:45,timerId:null,cpuTimer:null,cpuClaimTimer:null,cpuDifficulty:'normal',running:false,prompt:null,usedPromptIds:new Set(),setNo:1,setWins:{A:0,B:0},bonusOwner:null,players:{A:null,B:null},log:null,sessionId:null};
+const state={mode:'versus',duration:45,timeLeft:45,timerId:null,prepTimer:null,preparing:false,prepLeft:5,cpuTimer:null,cpuClaimTimer:null,cpuDifficulty:'normal',running:false,prompt:null,usedPromptIds:new Set(),setNo:1,setWins:{A:0,B:0},bonusOwner:null,players:{A:null,B:null},log:null,sessionId:null};
 function newPlayer(){return {deck:shuffle(allCards),placed:[],finished:false,declaredAt:null,skips:0,bonus:false}}
 function currentCard(pl){return pl.deck[0]||null}
 function initPlayerKeys(){state.players.A=newPlayer();state.players.B=newPlayer()}
@@ -539,6 +546,7 @@ function beginSetLog(){
     mode:state.mode,
     cpuDifficulty:state.mode==='cpu'?state.cpuDifficulty:null,
     duration:state.duration,
+    memorizationSeconds:5,
     prompt:{id:state.prompt.id,difficulty:state.prompt.d},
     actions:[],
     initialDeckOrder:{
@@ -629,9 +637,15 @@ function setupGame(newMatch=true){
 }
 function startSet(){
   clearInterval(state.timerId);
+  clearInterval(state.prepTimer);
   clearTimeout(state.cpuTimer);
   clearTimeout(state.cpuClaimTimer);
-  state.timeLeft=state.duration;state.running=true;state.bonusOwner=null;initPlayerKeys();
+  state.timeLeft=state.duration;
+  state.preparing=true;
+  state.prepLeft=5;
+  state.running=true;
+  state.bonusOwner=null;
+  initPlayerKeys();
   state.prompt=choosePrompt();state.usedPromptIds.add(state.prompt.id);
   if(state.mode==='solo') state.players.B={deck:[],placed:[],finished:true,declaredAt:0,skips:0,bonus:false};
   beginSetLog();
@@ -643,13 +657,57 @@ function startSet(){
   updateAll();
   requestWakeLock();
   document.body.classList.add('game-running');
-  if(state.mode==='cpu') scheduleCpuMove(true);
-  state.timerId=setInterval(()=>{state.timeLeft--;updateTimer();if(state.timeLeft<=0)endByTime()},1000);
+
+  state.prepTimer=setInterval(()=>{
+    state.prepLeft--;
+    if(state.prepLeft<=0){
+      clearInterval(state.prepTimer);
+      state.preparing=false;
+      logAction(null,'sortingStart',{memorizationSeconds:5});
+      updateAll();
+      if(state.mode==='cpu') scheduleCpuMove(true);
+      state.timerId=setInterval(()=>{
+        state.timeLeft--;
+        updateTimer();
+        if(state.timeLeft<=0)endByTime();
+      },1000);
+    }else{
+      updateAll();
+    }
+  },1000);
 }
-function updateTimer(){document.getElementById('timer').textContent=state.timeLeft;document.getElementById('setScore').textContent=['versus','cpu'].includes(state.mode)?`SET ${state.setNo}｜A ${state.setWins.A} - ${state.setWins.B} B`:'SCORE ATTACK'}
+function updateTimer(){
+  const timerBox=document.querySelector('.timer-box');
+  const label=document.querySelector('.timer-label');
+  if(state.preparing){
+    document.getElementById('timer').textContent=state.prepLeft;
+    label.textContent='お題を覚える';
+    timerBox.classList.add('preview');
+  }else{
+    document.getElementById('timer').textContent=state.timeLeft;
+    label.textContent='残り';
+    timerBox.classList.remove('preview');
+  }
+  document.getElementById('setScore').textContent=['versus','cpu'].includes(state.mode)?`SET ${state.setNo}｜A ${state.setWins.A} - ${state.setWins.B} B`:'SCORE ATTACK';
+}
 function updateAll(){updateTimer();document.getElementById('promptCard').innerHTML=renderPrompt(state.prompt);updatePlayer('A');updatePlayer('B');updateBonus();}
-function updatePlayer(k){const p=state.players[k];const cardEl=document.getElementById('card'+k);if(cardEl)cardEl.innerHTML=renderCard(currentCard(p));const stats=document.getElementById('stats'+k);if(stats)stats.innerHTML=`<span>山札 ${p.deck.length}</span><span>配置 ${p.placed.length}</span><span>底送り ${p.skips}</span>${p.finished?'<span>終了</span>':''}`;document.querySelectorAll(`[data-player="${k}"]`).forEach(btn=>{const cpuLocked=state.mode==='cpu'&&k==='A';btn.disabled=cpuLocked||!state.running||p.finished||(!currentCard(p)&&btn.dataset.action!=='finish');if(btn.dataset.action==='finish')btn.classList.toggle('ready',!cpuLocked&&state.running&&!p.finished)});}
-function updateBonus(){const tok=document.getElementById('bonusToken');tok.classList.toggle('claimed',!!state.bonusOwner);for(const k of ['A','B']){const b=document.querySelector(`[data-claim="${k}"]`);b.disabled=!!state.bonusOwner||!state.players[k]||!state.players[k].finished||!state.running;b.classList.toggle('enabled',!b.disabled)}const st=document.getElementById('claimStatus');st.textContent=state.bonusOwner?`${state.bonusOwner} が＋3点`:'終了後に取る';}
+function updatePlayer(k){
+  const p=state.players[k];
+  const cardEl=document.getElementById('card'+k);
+  if(cardEl){
+    cardEl.innerHTML=state.preparing
+      ?`<div class="empty-card prep-message">お題を覚えてください<b>${state.prepLeft}</b></div>`
+      :renderCard(currentCard(p));
+  }
+  const stats=document.getElementById('stats'+k);
+  if(stats)stats.innerHTML=`<span>山札 ${p.deck.length}</span><span>配置 ${p.placed.length}</span><span>底送り ${p.skips}</span>${p.finished?'<span>終了</span>':''}`;
+  document.querySelectorAll(`[data-player="${k}"]`).forEach(btn=>{
+    const cpuLocked=state.mode==='cpu'&&k==='A';
+    btn.disabled=state.preparing||cpuLocked||!state.running||p.finished||(!currentCard(p)&&btn.dataset.action!=='finish');
+    if(btn.dataset.action==='finish')btn.classList.toggle('ready',!state.preparing&&!cpuLocked&&state.running&&!p.finished);
+  });
+}
+function updateBonus(){const tok=document.getElementById('bonusToken');tok.classList.toggle('claimed',!!state.bonusOwner);for(const k of ['A','B']){const b=document.querySelector(`[data-claim="${k}"]`);b.disabled=state.preparing||!!state.bonusOwner||!state.players[k]||!state.players[k].finished||!state.running;b.classList.toggle('enabled',!b.disabled)}const st=document.getElementById('claimStatus');st.textContent=state.bonusOwner?`${state.bonusOwner} が＋3点`:'終了後に取る';}
 function rnd(min,max){return min+Math.random()*(max-min)}
 function chooseCpuLane(card,profile){
   const matches=[1,2,3].filter(pt=>evalCond(state.prompt['c'+pt],card));
@@ -681,7 +739,7 @@ function shouldCpuFinish(profile,p){
 }
 function scheduleCpuMove(initial=false){
   clearTimeout(state.cpuTimer);
-  if(!state.running||state.mode!=='cpu') return;
+  if(!state.running||state.preparing||state.mode!=='cpu') return;
   const p=state.players.A;
   if(!p||p.finished) return;
   const profile=CPU_PROFILE[state.cpuDifficulty];
@@ -709,7 +767,7 @@ function scheduleCpuMove(initial=false){
   },delay);
 }
 function cpuFinish(){
-  if(!state.running||state.mode!=='cpu') return;
+  if(!state.running||state.preparing||state.mode!=='cpu') return;
   const p=state.players.A;
   if(!p||p.finished) return;
   act('A','finish',true);
@@ -722,7 +780,7 @@ function cpuFinish(){
   },rnd(profile.claimMin,profile.claimMax));
 }
 
-function act(k,action,internal=false){if(!state.running)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||p.finished)return;const card=currentCard(p);
+function act(k,action,internal=false){if(!state.running||state.preparing)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||p.finished)return;const card=currentCard(p);
   if(action==='finish'){
     logAction(k,'finish',{deckRemaining:p.deck.length,placed:p.placed.length,skips:p.skips});
     p.finished=true;p.declaredAt=performance.now();toast(`${k==='A'?'A':'B'}：「仕分け終了！」`);updatePlayer(k);updateBonus();if(state.mode==='solo'){p.bonus=true;state.bonusOwner=k;finishSet('soloFinish')}return
@@ -730,17 +788,23 @@ function act(k,action,internal=false){if(!state.running)return;if(state.mode==='
   if(!card)return;
   if(action==='skip'){
     logAction(k,'skip',{card:cardSnapshot(card),deckRemainingBefore:p.deck.length});
-    p.deck.push(p.deck.shift());p.skips++;updatePlayer(k);return
+    // 底送りしたカードは除外しない。山札の最後尾へ回し、
+    // 一周して再び一番上に来たら何度でも選択できる。
+    const skipped=p.deck.shift();
+    p.deck.push(skipped);
+    p.skips++;
+    updatePlayer(k);
+    return
   }
   const point=Number(action);
   const correct=evalCond(state.prompt['c'+point],card);
   logAction(k,'place',{card:cardSnapshot(card),point,correct,deckRemainingBefore:p.deck.length});
   p.deck.shift();p.placed.push({card,point,correct});updatePlayer(k);
 }
-function claim(k,internal=false){if(!state.running||!['versus','cpu'].includes(state.mode)||state.bonusOwner)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||!p.finished)return;logAction(k,'claimBonus',{bonus:3});state.bonusOwner=k;p.bonus=true;toast(`${k} が給料ボーナス＋3点！`);updateBonus();if(state.players.A.finished&&state.players.B.finished)finishSet('bothFinished')}
+function claim(k,internal=false){if(!state.running||state.preparing||!['versus','cpu'].includes(state.mode)||state.bonusOwner)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||!p.finished)return;logAction(k,'claimBonus',{bonus:3});state.bonusOwner=k;p.bonus=true;toast(`${k} が給料ボーナス＋3点！`);updateBonus();if(state.players.A.finished&&state.players.B.finished)finishSet('bothFinished')}
 function endByTime(){if(!state.running)return;logAction(null,'timeUp',{});for(const k of ['A','B']) if(state.players[k]) state.players[k].finished=true;finishSet('time')}
 function calc(p){let pts=0,wrong=0,c1=0,c2=0,c3=0;for(const x of p.placed){if(x.correct){pts+=x.point;if(x.point===1)c1++;if(x.point===2)c2++;if(x.point===3)c3++;}else{pts-=2;wrong++}}if(p.bonus)pts+=3;return {pts,wrong,c1,c2,c3,bonus:p.bonus?3:0,unplaced:p.deck.length,placed:p.placed.length,skips:p.skips}}
-function finishSet(reason){if(!state.running)return;state.running=false;document.body.classList.remove('game-running');releaseWakeLock();clearInterval(state.timerId);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);updateAll();const a=calc(state.players.A),b=calc(state.players.B);let setWinner=null;
+function finishSet(reason){if(!state.running)return;state.running=false;document.body.classList.remove('game-running');releaseWakeLock();clearInterval(state.timerId);clearInterval(state.prepTimer);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);updateAll();const a=calc(state.players.A),b=calc(state.players.B);let setWinner=null;
   if(['versus','cpu'].includes(state.mode)){
     if(a.pts>b.pts)setWinner='A';else if(b.pts>a.pts)setWinner='B';else if(a.wrong<b.wrong)setWinner='A';else if(b.wrong<a.wrong)setWinner='B';
     if(setWinner)state.setWins[setWinner]++;
@@ -762,14 +826,14 @@ function showResult(a,b,winner,reason){const rc=document.getElementById('resultC
   rc.innerHTML=html;document.getElementById('resultOverlay').classList.remove('hidden');
   const q=id=>document.getElementById(id);if(q('backSetup'))q('backSetup').onclick=goMenu;if(q('newMatch'))q('newMatch').onclick=()=>{q('resultOverlay').classList.add('hidden');setupGame(true)};if(q('nextSet'))q('nextSet').onclick=()=>{q('resultOverlay').classList.add('hidden');state.setNo++;startSet()};
 }
-function goMenu(){clearInterval(state.timerId);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);state.running=false;document.body.classList.remove('game-running');releaseWakeLock();document.getElementById('resultOverlay').classList.add('hidden');document.getElementById('game').classList.remove('active');document.getElementById('menu').classList.add('active')}
+function goMenu(){clearInterval(state.timerId);clearInterval(state.prepTimer);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);state.running=false;document.body.classList.remove('game-running');releaseWakeLock();document.getElementById('resultOverlay').classList.add('hidden');document.getElementById('game').classList.remove('active');document.getElementById('menu').classList.add('active')}
 let toastTimer;function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1200)}
 
 
 const cpuNoteText={
-  easy:'かんたん：ゆっくりめ。判断ミスがあり、1点・2点にも早めに置きます。',
-  normal:'ふつう：そこそこ速く、高得点も狙います。',
-  hard:'むずかしい：かなり速く、3点を強く狙い、ミスも少なめです。'
+  easy:'かんたん：かなりゆっくりめ。判断ミスがあり、1点・2点にも早めに置きます。',
+  normal:'ふつう：少し考えながら、高得点も狙います。',
+  hard:'むずかしい：速めで3点も狙いますが、以前より少しミスが増えています。'
 };
 function updateCpuSetup(){
   const mode=(document.querySelector('input[name=mode]:checked')||{value:'versus'}).value;
@@ -807,25 +871,120 @@ async function releaseWakeLock(){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.running)requestWakeLock()});
 
 
-// Universal tap binding for iPhone Safari / WKWebView / in-app browsers.
-// We listen to touchend, pointerup and click, then suppress duplicates.
+// Gesture-aware tap binding.
+// A sorting action fires only on a deliberate short tap.
+// Long-pressing or dragging to reposition/scroll the screen will NOT sort a card.
 function bindTap(el,handler,{prevent=true}={}){
   if(!el)return;
-  let lastFire=0;
-  const fire=e=>{
+
+  const MAX_TAP_MS=420;
+  const MAX_MOVE_PX=12;
+
+  let touchStartTime=0;
+  let touchStartX=0;
+  let touchStartY=0;
+  let touchMoved=false;
+
+  let pointerStartTime=0;
+  let pointerStartX=0;
+  let pointerStartY=0;
+  let pointerMoved=false;
+  let pointerId=null;
+
+  let lastHandledAt=0;
+
+  const movedTooFar=(x,y,sx,sy)=>{
+    const dx=x-sx,dy=y-sy;
+    return Math.hypot(dx,dy)>MAX_MOVE_PX;
+  };
+
+  const runHandler=e=>{
     const now=Date.now();
-    if(now-lastFire<500){
-      if(prevent && e && e.cancelable)e.preventDefault();
-      return;
-    }
-    lastFire=now;
+    if(now-lastHandledAt<550)return;
+    lastHandledAt=now;
     if(prevent && e && e.cancelable)e.preventDefault();
     handler(e);
   };
 
-  el.addEventListener('touchend',fire,{passive:false});
-  if(window.PointerEvent)el.addEventListener('pointerup',fire,{passive:false});
-  el.addEventListener('click',fire,false);
+  // iPhone / touch devices
+  el.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    const t=e.touches[0];
+    touchStartTime=Date.now();
+    touchStartX=t.clientX;
+    touchStartY=t.clientY;
+    touchMoved=false;
+  },{passive:true});
+
+  el.addEventListener('touchmove',e=>{
+    if(!touchStartTime || e.touches.length!==1)return;
+    const t=e.touches[0];
+    if(movedTooFar(t.clientX,t.clientY,touchStartX,touchStartY)){
+      touchMoved=true;
+    }
+  },{passive:true});
+
+  el.addEventListener('touchend',e=>{
+    if(!touchStartTime)return;
+    const elapsed=Date.now()-touchStartTime;
+    const isTap=!touchMoved && elapsed<=MAX_TAP_MS;
+    touchStartTime=0;
+    touchMoved=false;
+
+    if(isTap)runHandler(e);
+    // If it was a drag or long press, do nothing and let the browser finish
+    // its scroll/position-adjustment gesture normally.
+  },{passive:false});
+
+  el.addEventListener('touchcancel',()=>{
+    touchStartTime=0;
+    touchMoved=false;
+  },{passive:true});
+
+  // Mouse / pen / non-touch Pointer Events
+  if(window.PointerEvent){
+    el.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='touch')return;
+      pointerId=e.pointerId;
+      pointerStartTime=Date.now();
+      pointerStartX=e.clientX;
+      pointerStartY=e.clientY;
+      pointerMoved=false;
+    },{passive:true});
+
+    el.addEventListener('pointermove',e=>{
+      if(e.pointerType==='touch' || pointerId!==e.pointerId || !pointerStartTime)return;
+      if(movedTooFar(e.clientX,e.clientY,pointerStartX,pointerStartY)){
+        pointerMoved=true;
+      }
+    },{passive:true});
+
+    el.addEventListener('pointerup',e=>{
+      if(e.pointerType==='touch' || pointerId!==e.pointerId || !pointerStartTime)return;
+      const elapsed=Date.now()-pointerStartTime;
+      const isTap=!pointerMoved && elapsed<=MAX_TAP_MS;
+      pointerId=null;
+      pointerStartTime=0;
+      pointerMoved=false;
+      if(isTap)runHandler(e);
+    },{passive:false});
+
+    el.addEventListener('pointercancel',()=>{
+      pointerId=null;
+      pointerStartTime=0;
+      pointerMoved=false;
+    },{passive:true});
+  }
+
+  // Keyboard-generated or ordinary desktop click fallback.
+  el.addEventListener('click',e=>{
+    // Ignore the synthetic click that follows a handled touch/pointer tap.
+    if(Date.now()-lastHandledAt<700){
+      if(prevent && e.cancelable)e.preventDefault();
+      return;
+    }
+    runHandler(e);
+  },false);
 }
 
 // Expose a minimal fallback entry point for restrictive embedded browsers.
