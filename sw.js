@@ -1,4 +1,4 @@
-const CACHE='clothing-sort-pwa-v3';
+const CACHE='clothing-sort-pwa-v4';
 const ASSETS=[
   './',
   './index.html',
@@ -13,19 +13,31 @@ self.addEventListener('install',e=>{
 });
 self.addEventListener('activate',e=>{
   e.waitUntil(
-    caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
       .then(()=>self.clients.claim())
   );
 });
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET') return;
-  e.respondWith(
-    caches.match(e.request).then(cached=>{
-      return cached || fetch(e.request).then(res=>{
+
+  // HTML navigation: try network first so GitHub updates appear quickly.
+  if(e.request.mode==='navigate'){
+    e.respondWith(
+      fetch(e.request).then(res=>{
         const copy=res.clone();
-        caches.open(CACHE).then(c=>c.put(e.request,copy));
+        caches.open(CACHE).then(c=>c.put('./index.html',copy));
         return res;
-      }).catch(()=>caches.match('./index.html'));
-    })
+      }).catch(()=>caches.match('./index.html'))
+    );
+    return;
+  }
+
+  e.respondWith(
+    caches.match(e.request).then(cached=>cached || fetch(e.request).then(res=>{
+      const copy=res.clone();
+      caches.open(CACHE).then(c=>c.put(e.request,copy));
+      return res;
+    }))
   );
 });

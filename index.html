@@ -84,7 +84,7 @@ button{touch-action:manipulation}
 .result-overlay{position:fixed;inset:0;background:rgba(15,21,33,.67);z-index:50;display:grid;place-items:center;padding:20px}.result-card{background:#fff;border-radius:24px;width:min(720px,100%);max-height:92svh;overflow:auto;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.result-card h2{margin:0 0 4px;font-size:28px}.result-sub{color:#677085;font-weight:800;margin-bottom:15px}.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.scorebox{border:1px solid var(--line);border-radius:16px;padding:14px}.scorebox h3{margin:0 0 8px}.scoreline{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e1e5ec;font-weight:800}.scoreline.total{font-size:22px;border:0;padding-top:10px}.winner{padding:13px;border-radius:14px;background:#eef7e9;color:#276b20;font-weight:1000;text-align:center;margin:14px 0}.result-actions{display:flex;gap:10px}.result-actions button{flex:1;border:0;border-radius:14px;padding:12px;font-weight:1000}.primary{background:#173b66;color:#fff}.secondary{background:#edf1f6;color:#33405a}
 
 .rules-modal{position:fixed;inset:0;background:rgba(16,22,34,.62);z-index:60;display:grid;place-items:center;padding:20px}.modal-box{width:min(760px,100%);max-height:90svh;overflow:auto;background:#fff;border-radius:22px;padding:20px}.modal-box h2{margin-top:0}.rule-list{line-height:1.7;font-weight:700;color:#35405a}.rule-list li{margin-bottom:7px}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#172033;color:#fff;padding:10px 14px;border-radius:999px;font-weight:900;z-index:80;opacity:0;pointer-events:none;transition:.18s}.toast.show{opacity:1;bottom:26px}
+.toast{pointer-events:none!important;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#172033;color:#fff;padding:10px 14px;border-radius:999px;font-weight:900;z-index:80;opacity:0;pointer-events:none;transition:.18s}.toast.show{opacity:1;bottom:26px}
 
 @media (max-width:760px){
   .topbar{padding:7px 9px}.brand{font-size:14px}.brand small{display:none}
@@ -239,6 +239,50 @@ body{
   .standalone-hint{display:none!important}
 }
 
+
+/* ===== 終了宣言：中央を左→右へ流れる非操作レイヤー ===== */
+.finish-marquee{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none !important;
+  z-index:45;
+  display:flex;
+  align-items:center;
+}
+.finish-marquee-text{
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translate(-130%,-50%);
+  white-space:nowrap;
+  padding:10px 18px;
+  border-radius:999px;
+  background:rgba(23,32,51,.94);
+  color:#fff;
+  font-size:clamp(16px,3.2vw,26px);
+  font-weight:1000;
+  letter-spacing:.02em;
+  box-shadow:0 8px 22px rgba(0,0,0,.18);
+  opacity:0;
+  pointer-events:none !important;
+}
+.finish-marquee-text.run{
+  animation:finishMarqueeLTR 1.45s cubic-bezier(.18,.76,.32,1) forwards;
+}
+@keyframes finishMarqueeLTR{
+  0%   {transform:translate(-130%,-50%);opacity:0}
+  12%  {opacity:1}
+  82%  {opacity:1}
+  100% {transform:translate(calc(100vw + 40px),-50%);opacity:0}
+}
+@media (max-width:760px){
+  .finish-marquee-text{
+    padding:8px 14px;
+    font-size:18px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -320,6 +364,9 @@ body{
       </div>
 
       <div class="center-zone">
+        <div class="finish-marquee" id="finishMarquee" aria-live="polite" aria-atomic="true">
+          <div class="finish-marquee-text" id="finishMarqueeText"></div>
+        </div>
         <div class="timer-box">
           <div class="timer-label">残り</div>
           <div class="timer" id="timer">45</div>
@@ -371,7 +418,7 @@ body{
     <li>終了するときは、未配置カードを山札側へ戻して手を離す → <strong>「仕分け終了！」</strong> → 中央の給料ボーナストークンを取る、の順です。Web版では終了ボタンを押すと未配置カードを自動的に山札へ戻し、操作をロックします。</li>
     <li>宣言順ではなく、正しい終了後に<strong>先にトークンを取った人が＋3点</strong>。上半分がA、下半分がBのトークン取得ボタンです。</li>
     <li>相手が終了しても、まだ宣言していないプレイヤーは時間切れまで続けられます。</li>
-    <li>セットは合計得点が高い方が獲得。同点は誤配置の少ない方。それも同じなら引き分け。2セット先取で勝利です。</li><li>Web版はプレイログをブラウザ内に保存できます。上部の「ログ」からJSON/CSVを書き出せます。仕分けボタンは短いタップのみ反応し、長押しや画面を動かすドラッグ操作では反応しません。</li>
+    <li>セットは合計得点が高い方が獲得。同点は誤配置の少ない方。それも同じなら引き分け。2セット先取で勝利です。</li><li>Web版はプレイログをブラウザ内に保存できます。上部の「ログ」からJSON/CSVを書き出せます。仕分けボタンは短いタップのみ反応し、長押しや画面を動かすドラッグ操作では反応しません。 相手の終了宣言は中央を左から右へ流れる表示になり、操作を妨げません。</li>
   </ol>
   <button type="button" class="start-btn" id="closeRules">閉じる</button>
 </div></div>
@@ -828,7 +875,10 @@ function cpuFinish(){
 function act(k,action,internal=false){if(!state.running||state.preparing)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||p.finished)return;const card=currentCard(p);
   if(action==='finish'){
     logAction(k,'finish',{deckRemaining:p.deck.length,placed:p.placed.length,skips:p.skips});
-    p.finished=true;p.declaredAt=performance.now();toast(`${k==='A'?'A':'B'}：「仕分け終了！」`);updatePlayer(k);updateBonus();if(state.mode==='solo'){p.bonus=true;state.bonusOwner=k;finishSet('soloFinish')}return
+    p.finished=true;p.declaredAt=performance.now();
+    const finishName=(state.mode==='cpu'&&k==='A')?'CPU':(k==='A'?'PLAYER A':'PLAYER B');
+    showFinishMarquee(`${finishName}　仕分け終了！`);
+    updatePlayer(k);updateBonus();if(state.mode==='solo'){p.bonus=true;state.bonusOwner=k;finishSet('soloFinish')}return
   }
   if(!card)return;
   if(action==='skip'){
@@ -873,6 +923,26 @@ function showResult(a,b,winner,reason){const rc=document.getElementById('resultC
 }
 function goMenu(){clearInterval(state.timerId);clearInterval(state.prepTimer);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);state.running=false;document.body.classList.remove('game-running');releaseWakeLock();document.getElementById('resultOverlay').classList.add('hidden');document.getElementById('game').classList.remove('active');document.getElementById('menu').classList.add('active')}
 let toastTimer;function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1200)}
+
+let finishMarqueeTimer;
+function showFinishMarquee(msg){
+  const wrap=document.getElementById('finishMarquee');
+  const textEl=document.getElementById('finishMarqueeText');
+  if(!wrap||!textEl)return;
+
+  clearTimeout(finishMarqueeTimer);
+  textEl.textContent=msg;
+
+  // Restart animation even if another finish notice just ran.
+  textEl.classList.remove('run');
+  void textEl.offsetWidth;
+  textEl.classList.add('run');
+
+  finishMarqueeTimer=setTimeout(()=>{
+    textEl.classList.remove('run');
+  },1550);
+}
+
 
 
 const cpuNoteText={
