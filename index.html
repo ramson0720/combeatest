@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="theme-color" content="#183b66" />
+<title>衣類仕分けコンベア</title>
+<style>
+:root{
+  --ink:#172033;--paper:#fffdfa;--line:#d8dde8;--soft:#f4f7fb;
+  --green:#36a85d;--greenSoft:#e9f7ee;
+  --purple:#7d45c8;--purpleSoft:#f0e8fb;
+  --black:#20242a;--blackSoft:#eceef1;
+  --red:#ef3340;--yellow:#f4a81c;--blue:#2186e8;
+  --danger:#df2d3f;--ok:#229653;
+  --shadow:0 10px 25px rgba(23,32,51,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#eef2f7;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif}
+button,select,input{font:inherit}
+button{touch-action:manipulation}
+.hidden{display:none!important}
+.log-modal{position:fixed;inset:0;background:rgba(15,21,33,.62);z-index:60;display:grid;place-items:center;padding:20px}
+.log-box{width:min(560px,100%);background:#fff;border-radius:22px;padding:22px;box-shadow:0 18px 45px rgba(0,0,0,.2)}
+.log-box h2{margin:0 0 8px}.log-box p{color:#657087;font-weight:700;line-height:1.6}
+.log-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.log-actions button{border:0;border-radius:14px;padding:12px 14px;font-weight:1000;cursor:pointer}
+.log-export{background:#183b66;color:#fff}.log-csv{background:#e8f1ff;color:#183b66}
+.log-clear{background:#fdecec;color:#b91c1c}.log-close{background:#eef1f5;color:#3f4a60}
+.log-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.log-chip{background:#f5f7fb;border:1px solid #e1e5ed;border-radius:12px;padding:10px;text-align:center}
+.log-chip b{display:block;font-size:20px}.log-chip span{font-size:11px;color:#778197;font-weight:800}
+.app{min-height:100svh;display:flex;flex-direction:column}
+.topbar{padding:10px 14px;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.brand{font-weight:900;font-size:18px}.brand small{font-weight:700;color:#677085;font-size:11px;margin-left:8px}
+.top-actions{display:flex;gap:8px}.tiny-btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:800;color:#44506a}
+.screen{display:none;flex:1}.screen.active{display:flex}
+#menu{align-items:center;justify-content:center;padding:26px}
+.menu-card{width:min(780px,100%);background:#fff;border-radius:24px;box-shadow:var(--shadow);padding:24px}
+.menu-title{font-size:32px;font-weight:1000;margin:0 0 4px}.menu-sub{color:#677085;font-weight:700;margin-bottom:22px}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.setup-box{border:1px solid var(--line);border-radius:18px;padding:16px;background:#fafbfd}
+.setup-box h3{margin:0 0 12px;font-size:16px}.radio-row,.check-row{display:flex;gap:8px;flex-wrap:wrap}
+.choice{position:relative}.choice input{position:absolute;opacity:0}.choice span{display:block;border:2px solid #d9deea;background:#fff;border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer}.choice input:checked+span{border-color:#2f74f1;box-shadow:0 0 0 3px rgba(47,116,241,.12)}
+.diff-green input:checked+span{border-color:var(--green);background:var(--greenSoft)}.diff-purple input:checked+span{border-color:var(--purple);background:var(--purpleSoft)}.diff-black input:checked+span{border-color:var(--black);background:#f0f0f0}
+.start-btn{width:100%;margin-top:18px;border:0;border-radius:18px;background:#183b66;color:#fff;font-weight:1000;font-size:20px;padding:16px;box-shadow:0 8px 18px rgba(24,59,102,.22)}
+.tip{margin-top:14px;padding:12px 14px;background:#fff8da;border:1px solid #f0d87b;border-radius:14px;color:#6e5900;font-weight:700;line-height:1.6}
+.cpu-note{margin-top:10px;font-size:12px;font-weight:800;color:#687287;line-height:1.5}
+.cpu-easy input:checked+span{border-color:#46a96b;background:#e9f7ee}
+.cpu-normal input:checked+span{border-color:#7d45c8;background:#f0e8fb}
+.cpu-hard input:checked+span{border-color:#20242a;background:#eceef1}
+
+
+#game{flex-direction:column;background:#f2f5f9;overflow:hidden}
+.board{flex:1;display:grid;grid-template-rows:1fr auto 1fr;min-height:0}
+.player-zone{display:grid;grid-template-columns:minmax(160px,280px) 1fr;gap:12px;padding:10px 14px;min-height:0;align-items:center}
+.player-zone.face-top{transform:rotate(180deg)}
+.player-panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:0 5px 14px rgba(23,32,51,.06);min-height:0}
+.p-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.p-name{font-weight:1000}.stats{font-size:12px;font-weight:800;color:#69738a;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.current-wrap{display:flex;align-items:center;justify-content:center;min-height:0}.current-card{width:min(158px,42vw);aspect-ratio:63/88;background:white;border:2px solid #e0e4ec;border-radius:17px;box-shadow:0 7px 18px rgba(23,32,51,.13);display:flex;flex-direction:column;overflow:hidden;position:relative}.empty-card{display:flex;align-items:center;justify-content:center;color:#96a0b4;font-weight:900;height:100%}
+.card-mini-top{height:21%;display:flex;gap:8px;align-items:center;justify-content:center;border-bottom:1px solid #edf0f5}.card-art{flex:1;display:grid;place-items:center;position:relative;overflow:hidden}.crayon-bg{position:absolute;width:78%;height:62%;opacity:.22;transform:rotate(-9deg);border-radius:40% 58% 45% 55%;filter:saturate(.9)}.card-art svg{width:75%;height:75%;position:relative;z-index:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.06))}.card-bottom{height:23%;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #edf0f5}.attr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-right:1px solid #edf0f5;font-size:10px;font-weight:900}.attr:last-child{border-right:0}.attr .mini{height:23px;display:grid;place-items:center}
+.crayon{width:31px;height:23px;position:relative}.crayon i{position:absolute;left:3px;width:26px;height:5px;border-radius:7px;transform:rotate(-24deg);opacity:.96}.crayon i:nth-child(1){top:2px}.crayon i:nth-child(2){top:9px;left:1px}.crayon i:nth-child(3){top:16px;left:5px}.crayon.red i{background:var(--red)}.crayon.yellow i{background:var(--yellow)}.crayon.blue i{background:var(--blue)}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.act{border:0;border-radius:13px;padding:10px 5px;font-weight:1000;color:#fff;box-shadow:inset 0 -2px rgba(0,0,0,.12);min-height:44px}.act:active{transform:translateY(1px)}.p1{background:var(--green)}.p2{background:var(--purple)}.p3{background:var(--black)}.skip{background:#7b8497}.finish{grid-column:1/-1;background:#e37819}.finish[disabled],.act[disabled]{opacity:.38;filter:grayscale(.3)}.finish.ready{background:#d24732;animation:pulse 1s infinite alternate}@keyframes pulse{from{box-shadow:0 0 0 0 rgba(210,71,50,.2)}to{box-shadow:0 0 0 7px rgba(210,71,50,.08)}}
+
+.center-zone{padding:8px 14px;display:grid;grid-template-columns:minmax(90px,120px) minmax(310px,650px) minmax(90px,120px);align-items:center;gap:12px;background:#e9eef5;border-top:1px solid #d7dde7;border-bottom:1px solid #d7dde7;min-height:190px;position:relative;z-index:5}
+.timer-box{text-align:center}.timer{font-size:48px;font-weight:1000;font-variant-numeric:tabular-nums;line-height:1}.timer-label{font-size:11px;color:#687287;font-weight:900}.set-score{font-size:12px;font-weight:900;margin-top:6px;color:#4e5a72}
+.prompt-wrap{display:flex;justify-content:center}
+.prompt-stack{display:flex;flex-direction:column;align-items:center;gap:8px;width:min(100%,620px)}
+.prompt-side-label{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:120px;padding:6px 18px;border-radius:999px;font-size:14px;font-weight:1000;color:#183b66;background:#dbeafb;box-shadow:0 2px 0 rgba(24,59,102,.08)}
+.prompt-side-label.top::after{content:"";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid #183b66}
+.prompt-side-label.bottom{background:#f7d6e6;color:#8a2854}
+.prompt-side-label.bottom::before{content:"";position:absolute;left:50%;top:-9px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:10px solid #d22f7a}
+.prompt-card{width:min(100%,620px);aspect-ratio:88/63;background:#fff;border:2px solid #cfd6e2;border-radius:17px;box-shadow:0 8px 20px rgba(23,32,51,.11);overflow:hidden;display:grid;grid-template-rows:1fr 1px 1fr;position:relative}.prompt-half{display:grid;grid-template-rows:repeat(3,1fr)}.prompt-half.mirror{transform:rotate(180deg)}.midline{background:#c8ceda;border-top:1px dashed #9ba4b5}
+.prompt-row{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;padding:2px 5px;gap:5px;border-bottom:1px solid rgba(0,0,0,.06)}.prompt-row:last-child{border-bottom:0}.row1{background:var(--greenSoft)}.row2{background:var(--purpleSoft)}.row3{background:var(--blackSoft)}.point-badge{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:1000;font-size:15px}.row1 .point-badge{background:var(--green)}.row2 .point-badge{background:var(--purple)}.row3 .point-badge{background:var(--black)}.condition{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;font-weight:1000;flex-wrap:wrap}.cond-text{font-size:11px;line-height:1.1;text-align:center}.icon-seq{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0}.op{font-size:14px;font-weight:1000;color:#2e3747}.or{font-size:9px;background:#fff;border-radius:8px;padding:1px 4px;border:1px solid #cfd4dd}.not-wrap{position:relative;display:inline-flex}.not-mark{position:absolute;right:-2px;top:-5px;width:15px;height:15px;border-radius:50%;background:#e22b3a;color:#fff;font-weight:1000;font-size:12px;display:grid;place-items:center;border:2px solid #fff}.token-icon{width:30px;height:30px;display:inline-grid;place-items:center}.token-icon svg{width:29px;height:29px}.pat{width:29px;height:29px;border:2px solid #5a616e;border-radius:50%;position:relative;background:#fff;overflow:hidden}.pat.plain{background:#c6c9ce}.pat.check{background:repeating-linear-gradient(0deg,#7c828c 0 4px,#d6d9dd 4px 8px),repeating-linear-gradient(90deg,transparent 0 4px,rgba(255,255,255,.55) 4px 8px)}.pat.star:before{content:"☆";font-size:28px;line-height:25px;color:#555d69;font-weight:1000}.exact-icon{width:38px;height:38px;border:1.5px solid #c5ccd7;border-radius:8px;background:#fff;display:grid;place-items:center;overflow:hidden}.exact-icon svg{width:34px;height:34px}
+.prompt-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #cdd3dd;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:1000;z-index:2;color:#536078;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+
+.bonus-wrap{text-align:center}.bonus-title{font-size:11px;font-weight:1000;color:#6b7488;margin-bottom:5px}.bonus-token{width:92px;height:92px;border-radius:50%;border:7px solid #f3bf35;background:radial-gradient(circle at 35% 30%,#fff7c4,#f5c63f 55%,#d9940f);box-shadow:0 7px 16px rgba(140,94,0,.25);margin:auto;position:relative;overflow:hidden}.bonus-token:before{content:"給料\A BONUS\A +3";white-space:pre;text-align:center;position:absolute;inset:0;display:grid;place-items:center;font-size:13px;line-height:1.15;font-weight:1000;color:#6b4a00}.claim-half{position:absolute;left:0;width:100%;height:50%;border:0;background:transparent;z-index:2;cursor:pointer}.claim-a{top:0}.claim-b{bottom:0}.claim-half.enabled:hover{background:rgba(255,255,255,.22)}.claim-half:disabled{cursor:not-allowed}.bonus-token.claimed{filter:grayscale(.7);opacity:.6}.claim-status{font-size:11px;font-weight:900;margin-top:5px;min-height:16px}
+
+.result-overlay{position:fixed;inset:0;background:rgba(15,21,33,.67);z-index:50;display:grid;place-items:center;padding:20px}.result-card{background:#fff;border-radius:24px;width:min(720px,100%);max-height:92svh;overflow:auto;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.result-card h2{margin:0 0 4px;font-size:28px}.result-sub{color:#677085;font-weight:800;margin-bottom:15px}.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.scorebox{border:1px solid var(--line);border-radius:16px;padding:14px}.scorebox h3{margin:0 0 8px}.scoreline{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e1e5ec;font-weight:800}.scoreline.total{font-size:22px;border:0;padding-top:10px}.winner{padding:13px;border-radius:14px;background:#eef7e9;color:#276b20;font-weight:1000;text-align:center;margin:14px 0}.result-actions{display:flex;gap:10px}.result-actions button{flex:1;border:0;border-radius:14px;padding:12px;font-weight:1000}.primary{background:#173b66;color:#fff}.secondary{background:#edf1f6;color:#33405a}
+
+.rules-modal{position:fixed;inset:0;background:rgba(16,22,34,.62);z-index:60;display:grid;place-items:center;padding:20px}.modal-box{width:min(760px,100%);max-height:90svh;overflow:auto;background:#fff;border-radius:22px;padding:20px}.modal-box h2{margin-top:0}.rule-list{line-height:1.7;font-weight:700;color:#35405a}.rule-list li{margin-bottom:7px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#172033;color:#fff;padding:10px 14px;border-radius:999px;font-weight:900;z-index:80;opacity:0;pointer-events:none;transition:.18s}.toast.show{opacity:1;bottom:26px}
+
+@media (max-width:760px){
+  .topbar{padding:7px 9px}.brand{font-size:14px}.brand small{display:none}
+  .setup-grid{grid-template-columns:1fr}.menu-title{font-size:25px}
+  .player-zone{grid-template-columns:120px 1fr;padding:6px 8px;gap:7px}.player-panel{padding:7px}.current-card{width:112px}.controls{gap:5px}.act{font-size:12px;padding:7px 3px;min-height:36px}.finish{font-size:12px}.p-head{margin-bottom:4px}.stats{font-size:10px}
+  .center-zone{grid-template-columns:68px 1fr 68px;gap:5px;padding:5px 7px;min-height:155px}.timer{font-size:32px}.bonus-token{width:64px;height:64px;border-width:5px}.bonus-token:before{font-size:9px}.prompt-row{grid-template-columns:35px 1fr 35px;padding:1px 3px}.point-badge{width:30px;height:30px;font-size:12px}.token-icon{width:24px;height:24px}.token-icon svg{width:23px;height:23px}.pat{width:23px;height:23px}.pat.star:before{font-size:22px}.cond-text{display:none}.exact-icon{width:29px;height:29px}.exact-icon svg{width:27px;height:27px}.prompt-name{font-size:8px}.score-grid{grid-template-columns:1fr}
+}
+@media (orientation:portrait) and (max-width:760px){
+  .board{grid-template-rows:1fr auto 1fr}.center-zone{min-height:145px}.player-zone{min-height:0}
+}
+
+/* ===== Smartphone / touch optimization ===== */
+body.game-running{overscroll-behavior:none;touch-action:pan-x pan-y}
+#game, #game *{-webkit-user-select:none;user-select:none}
+.act,.claim-half,.tiny-btn,.start-btn,.choice span{touch-action:manipulation;-webkit-touch-callout:none}
+.act{min-height:52px;font-size:16px}
+.finish{min-height:54px;font-size:17px}
+.claim-half{touch-action:none}
+.current-card{touch-action:none}
+.prompt-card{touch-action:none}
+@media (max-width:760px){
+  .topbar{padding:7px 9px;gap:7px}
+  .brand{font-size:14px}.brand small{display:none}
+  .tiny-btn{padding:7px 9px;font-size:12px;border-radius:10px}
+
+  #menu{padding:12px}
+  .menu-card{padding:16px;border-radius:18px}
+  .menu-title{font-size:25px}
+  .setup-grid{grid-template-columns:1fr;gap:10px}
+  .setup-box{padding:12px}
+  .setup-box[style*="grid-column"]{grid-column:auto!important}
+  .choice span{padding:10px 11px}
+
+  .board{grid-template-rows:minmax(0,1fr) auto minmax(0,1fr)}
+  .player-zone{
+    grid-template-columns:128px minmax(0,1fr);
+    gap:7px;padding:7px 8px;
+  }
+  .player-panel{padding:7px;border-radius:14px}
+  .p-head{margin-bottom:5px}
+  .p-name{font-size:13px}
+  .stats{font-size:10px;gap:5px}
+  .current-card{width:118px;border-radius:13px}
+  .card-mini-top{gap:4px}
+  .card-bottom{height:25%}
+  .attr{font-size:8px}
+  .attr .mini{height:18px}
+  .crayon{transform:scale(.82)}
+  .token-icon{transform:scale(.82)}
+
+  .controls{
+    grid-template-columns:repeat(2,1fr);
+    gap:6px;margin-top:6px
+  }
+  .act{min-height:48px;padding:8px 4px;font-size:15px;border-radius:11px}
+  .p3,.skip{grid-column:auto}
+  .finish{grid-column:1/-1;min-height:50px}
+
+  .center-zone{
+    grid-template-columns:66px minmax(0,1fr) 72px;
+    gap:6px;padding:6px 8px;min-height:150px
+  }
+  .timer{font-size:35px}
+  .timer-label,.set-score{font-size:9px}
+  .prompt-stack{gap:4px}
+  .prompt-side-label{min-width:72px;padding:3px 9px;font-size:10px}
+  .prompt-side-label.top::after{bottom:-7px;border-left-width:6px;border-right-width:6px;border-top-width:8px}
+  .prompt-side-label.bottom::before{top:-7px;border-left-width:6px;border-right-width:6px;border-bottom-width:8px}
+  .prompt-card{border-radius:11px}
+  .prompt-row{grid-template-columns:34px 1fr 34px;padding:1px 3px;gap:2px}
+  .point-badge{width:30px;height:30px;font-size:11px}
+  .condition{gap:2px}
+  .cond-text{font-size:8px}
+  .token-icon{width:23px;height:23px}
+  .token-icon svg{width:23px;height:23px}
+  .pat{width:23px;height:23px}
+  .pat.star:before{font-size:22px;line-height:20px}
+  .exact-icon{width:30px;height:30px}
+  .exact-icon svg{width:27px;height:27px}
+  .or{font-size:7px;padding:1px 2px}
+  .op{font-size:11px}
+  .not-mark{width:13px;height:13px;font-size:10px}
+  .prompt-name{font-size:8px;padding:1px 5px}
+
+  .bonus-title{font-size:9px}
+  .bonus-token{width:67px;height:67px;border-width:5px}
+  .bonus-token:before{font-size:10px}
+  .claim-status{font-size:9px}
+}
+@media (max-width:430px){
+  .player-zone{grid-template-columns:104px minmax(0,1fr)}
+  .current-card{width:98px}
+  .act{font-size:13px;min-height:46px}
+  .finish{font-size:14px}
+  .center-zone{grid-template-columns:54px minmax(0,1fr) 58px;min-height:135px}
+  .timer{font-size:29px}
+  .bonus-token{width:55px;height:55px}
+  .bonus-token:before{font-size:8px}
+  .prompt-row{grid-template-columns:27px 1fr 27px}
+  .point-badge{width:25px;height:25px;font-size:9px}
+  .cond-text{display:none}
+}
+@media (orientation:landscape) and (max-height:560px){
+  .topbar{padding:5px 8px}
+  .player-zone{grid-template-columns:105px minmax(0,1fr);padding:4px 7px}
+  .current-card{width:92px}
+  .act{min-height:38px;padding:5px 3px;font-size:12px}
+  .finish{min-height:40px}
+  .center-zone{min-height:116px;padding:4px 8px}
+  .prompt-side-label{display:none}
+  .bonus-token{width:55px;height:55px}
+  .timer{font-size:30px}
+}
+
+</style>
+</head>
+<body>
+<noscript>
+  <div style="position:fixed;inset:0;z-index:9999;background:#fff;padding:28px;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;color:#172033">
+    <h2 style="margin-top:0">このゲームにはJavaScriptが必要です</h2>
+    <p style="line-height:1.7;font-weight:700">ChatGPTアプリ内のHTMLプレビューではJavaScriptが無効化されることがあります。SafariなどJavaScriptが使えるブラウザ、または静的サイトとして公開したURLから開いてください。</p>
+  </div>
+</noscript>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">衣類仕分けコンベア <small>Web playable mock</small></div>
+    <div class="top-actions">
+      <button type="button" class="tiny-btn" id="rulesBtn">ルール</button>
+      <button type="button" class="tiny-btn" id="logBtn">ログ <span id="logCount">0</span></button>
+      <button type="button" class="tiny-btn" id="menuBtn">設定</button>
+    </div>
+  </header>
+
+  <section id="menu" class="screen active">
+    <div class="menu-card">
+      <h1 class="menu-title">仕分け開始！</h1>
+      <div class="menu-sub">現在のルールを、そのまま触って試せるWebモックです。Safariの「共有 → ホーム画面に追加」でアプリのように遊べます。</div>
+      <div class="setup-grid">
+        <div class="setup-box">
+          <h3>モード</h3>
+          <div class="radio-row">
+            <label class="choice"><input type="radio" name="mode" value="versus" checked><span>2人対戦</span></label>
+            <label class="choice"><input type="radio" name="mode" value="cpu"><span>CPU対戦</span></label>
+            <label class="choice"><input type="radio" name="mode" value="solo"><span>スコアアタック</span></label>
+          </div>
+        </div>
+        <div class="setup-box">
+          <h3>制限時間</h3>
+          <div class="radio-row">
+            <label class="choice"><input type="radio" name="time" value="45" checked><span>45秒</span></label>
+            <label class="choice"><input type="radio" name="time" value="30"><span>30秒（上級）</span></label>
+          </div>
+        </div>
+        <div class="setup-box hidden" id="cpuDifficultyBox">
+          <h3>CPU難易度</h3>
+          <div class="radio-row">
+            <label class="choice cpu-easy"><input type="radio" name="cpuDifficulty" value="easy"><span>かんたん</span></label>
+            <label class="choice cpu-normal"><input type="radio" name="cpuDifficulty" value="normal" checked><span>ふつう</span></label>
+            <label class="choice cpu-hard"><input type="radio" name="cpuDifficulty" value="hard"><span>むずかしい</span></label>
+          </div>
+          <div class="cpu-note" id="cpuDifficultyNote">ふつう：そこそこ速く、高得点も狙います。</div>
+        </div>
+        <div class="setup-box" style="grid-column:1/-1">
+          <h3>使うお題</h3>
+          <div class="check-row">
+            <label class="choice diff-green"><input type="checkbox" name="diff" value="green" checked><span>緑・かんたん 8枚</span></label>
+            <label class="choice diff-purple"><input type="checkbox" name="diff" value="purple" checked><span>紫・ふつう 8枚</span></label>
+            <label class="choice diff-black"><input type="checkbox" name="diff" value="black" checked><span>黒・むずかしい 8枚</span></label>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="start-btn" id="startBtn" ontouchend="if(window.__clothingSortStart){event.preventDefault();window.__clothingSortStart();}" onclick="if(window.__clothingSortStart){window.__clothingSortStart();}">ゲーム開始</button>
+      <div class="tip">2人対戦は、端末をテーブル中央に置き、向かい合って遊ぶ想定です。CPU対戦では自分が下側、CPUが上側です。スマホはタッチ操作対応です。iPhone Safari向けにtouch・pointer・clickの3系統へ対応しています。横向きにするとより遊びやすくなります。終了宣言後も、まだ宣言していない相手は時間切れまで続行できます。</div>
+    </div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="board">
+      <div class="player-zone face-top" id="zoneA">
+        <div class="current-wrap"><div class="current-card" id="cardA"></div></div>
+        <div class="player-panel">
+          <div class="p-head"><div class="p-name">PLAYER A</div><div class="stats" id="statsA"></div></div>
+          <div class="controls">
+            <button class="act p1" data-player="A" data-action="1">1点へ</button>
+            <button class="act p2" data-player="A" data-action="2">2点へ</button>
+            <button class="act p3" data-player="A" data-action="3">3点へ</button>
+            <button class="act skip" data-player="A" data-action="skip">底へ</button>
+            <button class="act finish" data-player="A" data-action="finish">仕分け終了！</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="center-zone">
+        <div class="timer-box">
+          <div class="timer-label">残り</div>
+          <div class="timer" id="timer">45</div>
+          <div class="set-score" id="setScore">SET 1</div>
+        </div>
+        <div class="prompt-wrap">
+  <div class="prompt-stack">
+    <div class="prompt-side-label top">相手側</div>
+    <div class="prompt-card" id="promptCard"></div>
+    <div class="prompt-side-label bottom">自分側</div>
+  </div>
+</div>
+        <div class="bonus-wrap" id="bonusWrap">
+          <div class="bonus-title">給料ボーナス</div>
+          <div class="bonus-token" id="bonusToken">
+            <button class="claim-half claim-a" data-claim="A" aria-label="Aがトークンを取る" disabled></button>
+            <button class="claim-half claim-b" data-claim="B" aria-label="Bがトークンを取る" disabled></button>
+          </div>
+          <div class="claim-status" id="claimStatus"></div>
+        </div>
+      </div>
+
+      <div class="player-zone" id="zoneB">
+        <div class="current-wrap"><div class="current-card" id="cardB"></div></div>
+        <div class="player-panel">
+          <div class="p-head"><div class="p-name">PLAYER B</div><div class="stats" id="statsB"></div></div>
+          <div class="controls">
+            <button class="act p1" data-player="B" data-action="1">1点へ</button>
+            <button class="act p2" data-player="B" data-action="2">2点へ</button>
+            <button class="act p3" data-player="B" data-action="3">3点へ</button>
+            <button class="act skip" data-player="B" data-action="skip">底へ</button>
+            <button class="act finish" data-player="B" data-action="finish">仕分け終了！</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="result-overlay hidden" id="resultOverlay"><div class="result-card" id="resultCard"></div></div>
+<div class="rules-modal hidden" id="rulesModal"><div class="modal-box">
+  <h2>現行ルール（Web版）</h2>
+  <ol class="rule-list">
+    <li>各プレイヤーは同じ構成の27枚を持ち、山札の一番上1枚だけを見ます。お題カードは上側が相手向け、下側が自分向けの表示です。</li>
+    <li>そのカードが条件を満たす1点・2点・3点のどこかへ配置します。複数に該当する場合は、どこへ置いても構いません。</li>
+    <li>一度置いたカードは動かせません。迷ったカードは「底へ」で山札の一番下へ送れます。</li>
+    <li>正解はレーンの点数。誤配置はそのカードが<strong>−2点</strong>。未配置は0点です。</li>
+    <li>通常45秒。上級は30秒。CPU対戦では「かんたん／ふつう／むずかしい」からCPUの速さ・正確さ・高得点狙いの強さを選べます。</li>
+    <li>終了するときは、未配置カードを山札側へ戻して手を離す → <strong>「仕分け終了！」</strong> → 中央の給料ボーナストークンを取る、の順です。Web版では終了ボタンを押すと未配置カードを自動的に山札へ戻し、操作をロックします。</li>
+    <li>宣言順ではなく、正しい終了後に<strong>先にトークンを取った人が＋3点</strong>。上半分がA、下半分がBのトークン取得ボタンです。</li>
+    <li>相手が終了しても、まだ宣言していないプレイヤーは時間切れまで続けられます。</li>
+    <li>セットは合計得点が高い方が獲得。同点は誤配置の少ない方。それも同じなら引き分け。2セット先取で勝利です。</li><li>Web版はプレイログをブラウザ内に保存できます。上部の「ログ」からJSON/CSVを書き出せます。</li>
+  </ol>
+  <button type="button" class="start-btn" id="closeRules">閉じる</button>
+</div></div>
+<div class="log-modal hidden" id="logModal">
+  <div class="log-box">
+    <h2>プレイログ</h2>
+    <p>このブラウザ内にプレイ結果を保存します。何回か遊んだあと、JSONかCSVを書き出してこのチャットにアップロードしてください。</p>
+    <div class="log-stat">
+      <div class="log-chip"><b id="logSets">0</b><span>記録セット</span></div>
+      <div class="log-chip"><b id="logMatches">0</b><span>セッション</span></div>
+      <div class="log-chip"><b id="logActions">0</b><span>操作数</span></div>
+    </div>
+    <div class="log-actions">
+      <button type="button" class="log-export" id="exportJsonBtn">JSONを書き出す</button>
+      <button type="button" class="log-csv" id="exportCsvBtn">CSVを書き出す</button>
+      <button type="button" class="log-clear" id="clearLogBtn">ログを削除</button>
+      <button type="button" class="log-close" id="closeLogBtn">閉じる</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const COLORS={red:'#ef3340',yellow:'#f4a81c',blue:'#2186e8'};
+const JP_COLOR={red:'赤',yellow:'黄',blue:'青'};
+const JP_TYPE={shirt:'Tシャツ',pants:'ズボン',socks:'靴下'};
+const JP_PATTERN={plain:'無地',check:'チェック',star:'星柄'};
+const DIFF_LABEL={green:'緑',purple:'紫',black:'黒'};
+const CPU_PROFILE={
+  easy:{
+    label:'かんたん',
+    thinkMin:1250,thinkMax:1950,
+    mistakeRate:.16,
+    highScoreBias:.30,
+    finishDeck:4,
+    finishTime:5,
+    claimMin:520,claimMax:900
+  },
+  normal:{
+    label:'ふつう',
+    thinkMin:850,thinkMax:1350,
+    mistakeRate:.07,
+    highScoreBias:.68,
+    finishDeck:2,
+    finishTime:6,
+    claimMin:260,claimMax:520
+  },
+  hard:{
+    label:'むずかしい',
+    thinkMin:520,thinkMax:880,
+    mistakeRate:.025,
+    highScoreBias:.92,
+    finishDeck:1,
+    finishTime:7,
+    claimMin:110,claimMax:260
+  }
+};
+
+
+const leaf=(kind,value)=>({kind,value});
+const C=v=>leaf('color',v), T=v=>leaf('type',v), P=v=>leaf('pattern',v);
+const AND=(...args)=>({kind:'and',args});
+const OR=(...args)=>({kind:'or',args});
+const NOT=arg=>({kind:'not',arg});
+const EXACT=(color,type,pattern)=>({kind:'exact',color,type,pattern});
+const EXACTANY=(...args)=>({kind:'exactAny',args});
+
+function evalCond(cond,card){
+  switch(cond.kind){
+    case 'color': return card.color===cond.value;
+    case 'type': return card.type===cond.value;
+    case 'pattern': return card.pattern===cond.value;
+    case 'and': return cond.args.every(x=>evalCond(x,card));
+    case 'or': return cond.args.some(x=>evalCond(x,card));
+    case 'not': return !evalCond(cond.arg,card);
+    case 'exact': return card.color===cond.color&&card.type===cond.type&&card.pattern===cond.pattern;
+    case 'exactAny': return cond.args.some(x=>evalCond(x,card));
+  }
+  return false;
+}
+
+const prompts=[
+// GREEN
+{d:'green',id:'G1',c1:OR(C('red'),C('yellow')),c2:T('shirt'),c3:AND(OR(C('red'),C('blue')),T('pants'))},
+{d:'green',id:'G2',c1:OR(C('yellow'),C('blue')),c2:T('pants'),c3:AND(OR(C('red'),C('yellow')),T('socks'))},
+{d:'green',id:'G3',c1:OR(C('red'),C('blue')),c2:T('socks'),c3:AND(OR(C('yellow'),C('blue')),T('shirt'))},
+{d:'green',id:'G4',c1:OR(P('plain'),P('check')),c2:C('red'),c3:AND(OR(C('red'),C('yellow')),P('star'))},
+{d:'green',id:'G5',c1:OR(P('check'),P('star')),c2:C('yellow'),c3:AND(OR(C('yellow'),C('blue')),P('plain'))},
+{d:'green',id:'G6',c1:OR(P('plain'),P('star')),c2:C('blue'),c3:AND(OR(C('red'),C('blue')),P('check'))},
+{d:'green',id:'G7',c1:OR(C('red'),P('plain')),c2:T('socks'),c3:AND(C('yellow'),OR(T('shirt'),T('pants')))},
+{d:'green',id:'G8',c1:OR(T('shirt'),P('star')),c2:C('blue'),c3:AND(P('check'),OR(T('pants'),T('socks')))},
+// PURPLE
+{d:'purple',id:'P1',c1:OR(C('red'),T('shirt')),c2:AND(C('yellow'),OR(T('pants'),T('socks'))),c3:AND(OR(C('red'),C('blue')),T('pants'),NOT(P('check')))},
+{d:'purple',id:'P2',c1:OR(C('yellow'),T('socks')),c2:AND(C('red'),OR(T('shirt'),T('pants'))),c3:AND(OR(C('yellow'),C('blue')),T('shirt'),NOT(P('star')))},
+{d:'purple',id:'P3',c1:NOT(P('plain')),c2:AND(C('blue'),OR(T('shirt'),T('socks'))),c3:AND(OR(C('red'),C('yellow')),P('check'),NOT(T('socks')))},
+{d:'purple',id:'P4',c1:OR(C('yellow'),T('pants')),c2:AND(C('red'),OR(T('shirt'),T('socks'))),c3:AND(OR(C('yellow'),C('blue')),OR(T('shirt'),T('socks')),P('star'))},
+{d:'purple',id:'P5',c1:OR(P('plain'),P('check')),c2:AND(C('red'),NOT(T('shirt'))),c3:AND(OR(C('red'),C('blue')),OR(T('pants'),T('socks')),P('star'))},
+{d:'purple',id:'P6',c1:OR(T('shirt'),T('pants')),c2:AND(C('yellow'),NOT(P('plain'))),c3:AND(OR(C('yellow'),C('blue')),T('socks'),NOT(P('check')))},
+{d:'purple',id:'P7',c1:OR(P('check'),P('star')),c2:AND(C('blue'),NOT(T('pants'))),c3:AND(OR(C('red'),C('yellow')),T('shirt'),NOT(P('plain')))},
+{d:'purple',id:'P8',c1:OR(T('pants'),T('socks')),c2:AND(C('red'),NOT(P('star'))),c3:AND(OR(C('red'),C('blue')),P('check'),NOT(T('shirt')))},
+// BLACK adjusted
+{d:'black',id:'K1',c1:NOT(C('red')),c2:AND(T('socks'),NOT(C('yellow'))),c3:AND(P('plain'),NOT(C('yellow')),NOT(T('socks')))},
+{d:'black',id:'K2',c1:NOT(C('blue')),c2:AND(T('shirt'),NOT(C('red'))),c3:AND(P('star'),NOT(C('red')),NOT(T('shirt')))},
+{d:'black',id:'K3',c1:NOT(C('yellow')),c2:AND(C('red'),NOT(T('pants'))),c3:EXACTANY(EXACT('red','shirt','plain'),EXACT('yellow','pants','check'),EXACT('blue','socks','star'))},
+{d:'black',id:'K4',c1:NOT(P('star')),c2:AND(C('yellow'),NOT(T('shirt'))),c3:EXACTANY(EXACT('red','pants','star'),EXACT('yellow','socks','plain'),EXACT('blue','shirt','check'))},
+{d:'black',id:'K5',c1:OR(C('red'),P('star')),c2:AND(C('blue'),NOT(T('shirt'))),c3:EXACTANY(EXACT('red','socks','check'),EXACT('yellow','shirt','star'),EXACT('blue','pants','plain'))},
+{d:'black',id:'K6',c1:OR(C('yellow'),T('shirt')),c2:AND(C('red'),NOT(P('plain'))),c3:EXACTANY(EXACT('red','shirt','star'),EXACT('red','socks','star'),EXACT('blue','pants','plain'))},
+{d:'black',id:'K7',c1:NOT(T('pants')),c2:AND(P('star'),NOT(C('blue'))),c3:AND(OR(C('red'),C('blue')),T('shirt'),NOT(P('plain')))},
+{d:'black',id:'K8',c1:OR(C('blue'),P('check')),c2:AND(T('socks'),NOT(P('check'))),c3:AND(P('plain'),NOT(C('red')),NOT(T('shirt')))}
+];
+
+const allCards=[];
+for(const color of ['red','yellow','blue']) for(const type of ['shirt','pants','socks']) for(const pattern of ['plain','check','star']) allCards.push({color,type,pattern,id:`${color}-${type}-${pattern}`});
+
+function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+
+function typeSvg(type,color='#59616d',pattern='plain',fullColor=null){
+  const c=fullColor||color; const stroke='#111820';
+  let patternDefs=''; let fill=c;
+  if(pattern==='check'){
+    patternDefs=`<defs><pattern id="chk" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="${c}"/><rect width="6" height="6" fill="#fff" opacity=".30"/><rect x="6" y="6" width="6" height="6" fill="#fff" opacity=".30"/><path d="M0 6H12M6 0V12" stroke="#fff" stroke-opacity=".25" stroke-width="1.5"/></pattern></defs>`; fill='url(#chk)';
+  }
+  let body='';
+  if(type==='shirt') body=`<path d="M29 20l14-8 9 8 14-8 14 8 12 22-17 10v34H25V52L8 42 20 20z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/><path d="M43 12c3 8 15 8 18 0" fill="none" stroke="${stroke}" stroke-width="4"/>`;
+  if(type==='pants') body=`<path d="M26 14h48l4 72H58L50 52 42 86H22l4-72z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/><path d="M27 25h46M50 14v20" fill="none" stroke="${stroke}" stroke-width="3"/>`;
+  if(type==='socks') body=`<path d="M19 15h29v34c0 13-10 30-29 37C9 90 2 82 8 73l17-20V15z" fill="${fill}" stroke="${stroke}" stroke-width="4"/><path d="M53 26h29v32c0 13-8 26-25 33-10 4-18-4-12-13l14-17V26z" fill="${fill}" stroke="${stroke}" stroke-width="4"/>`;
+  let stars='';
+  if(pattern==='star'){
+    const pts= type==='socks' ? [[26,32],[34,48],[20,61],[66,45],[60,63],[72,73],[32,76],[76,34]] : type==='pants' ? [[35,34],[61,34],[31,53],[64,55],[35,73],[61,73]] : [[28,36],[51,31],[72,39],[38,55],[60,58],[28,72],[70,73]];
+    stars=pts.map(([x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">★</text>`).join('');
+  }
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${patternDefs}${body}${stars}</svg>`;
+}
+function patternHtml(p){return `<span class="pat ${p}"></span>`}
+function crayonHtml(c){return `<span class="crayon ${c}"><i></i><i></i><i></i></span>`}
+function miniTypeHtml(t){return `<span class="token-icon">${typeSvg(t,'#59616d','plain')}</span>`}
+function fullExactHtml(c,t,p){return `<span class="exact-icon">${typeSvg(t,COLORS[c],p,COLORS[c])}</span>`}
+
+function renderCond(cond){
+  switch(cond.kind){
+    case 'color': return crayonHtml(cond.value);
+    case 'type': return miniTypeHtml(cond.value);
+    case 'pattern': return patternHtml(cond.value);
+    case 'exact': return fullExactHtml(cond.color,cond.type,cond.pattern);
+    case 'not': return `<span class="not-wrap">${renderCond(cond.arg)}<b class="not-mark">×</b></span>`;
+    case 'and': return cond.args.map(renderCond).join('<span class="op">＋</span>');
+    case 'or': return `<span class="icon-seq">${cond.args.map(renderCond).join('<span class="or">または</span>')}</span>`;
+    case 'exactAny': return `<span class="icon-seq">${cond.args.map(renderCond).join('<span class="or">/</span>')}</span>`;
+  }
+  return '';
+}
+function condText(cond){
+  switch(cond.kind){
+    case 'color':return JP_COLOR[cond.value];case 'type':return JP_TYPE[cond.value];case 'pattern':return JP_PATTERN[cond.value];
+    case 'not':return `${condText(cond.arg)}ではない`;
+    case 'and':return cond.args.map(condText).join('＋');
+    case 'or':return cond.args.map(condText).join('または');
+    case 'exact':return `${JP_COLOR[cond.color]}・${JP_TYPE[cond.type]}・${JP_PATTERN[cond.pattern]}`;
+    case 'exactAny':return cond.args.map(condText).join(' / ');
+  }
+}
+function promptRow(point,cond){return `<div class="prompt-row row${point}"><div class="point-badge">${point}点</div><div class="condition"><span class="icon-seq">${renderCond(cond)}</span><span class="cond-text">${esc(condText(cond))}</span></div><div class="point-badge">${point}点</div></div>`}
+function renderPrompt(p){
+  const top=`<div class="prompt-half mirror">${promptRow(1,p.c1)}${promptRow(2,p.c2)}${promptRow(3,p.c3)}</div>`;
+  const bottom=`<div class="prompt-half">${promptRow(1,p.c1)}${promptRow(2,p.c2)}${promptRow(3,p.c3)}</div>`;
+  return `${top}<div class="midline"></div>${bottom}<div class="prompt-name">${p.id}・${DIFF_LABEL[p.d]}</div>`;
+}
+
+function renderCard(card){
+  if(!card) return `<div class="empty-card">未配置カードなし</div>`;
+  const bg=COLORS[card.color];
+  return `<div class="card-mini-top">${crayonHtml(card.color)}${miniTypeHtml(card.type)}${patternHtml(card.pattern)}</div>
+    <div class="card-art"><div class="crayon-bg" style="background:${bg}"></div>${typeSvg(card.type,bg,card.pattern,bg)}</div>
+    <div class="card-bottom"><div class="attr"><div class="mini">${crayonHtml(card.color)}</div>${JP_COLOR[card.color]}</div><div class="attr"><div class="mini">${miniTypeHtml(card.type)}</div>${JP_TYPE[card.type]}</div><div class="attr"><div class="mini">${patternHtml(card.pattern)}</div>${JP_PATTERN[card.pattern]}</div></div>`;
+}
+
+const state={mode:'versus',duration:45,timeLeft:45,timerId:null,cpuTimer:null,cpuClaimTimer:null,cpuDifficulty:'normal',running:false,prompt:null,usedPromptIds:new Set(),setNo:1,setWins:{A:0,B:0},bonusOwner:null,players:{A:null,B:null},log:null,sessionId:null};
+function newPlayer(){return {deck:shuffle(allCards),placed:[],finished:false,declaredAt:null,skips:0,bonus:false}}
+function currentCard(pl){return pl.deck[0]||null}
+function initPlayerKeys(){state.players.A=newPlayer();state.players.B=newPlayer()}
+function selectedDiffs(){return [...document.querySelectorAll('input[name=diff]:checked')].map(x=>x.value)}
+function choosePrompt(){const diffs=selectedDiffs();let pool=prompts.filter(p=>diffs.includes(p.d)&&!state.usedPromptIds.has(p.id));if(!pool.length){state.usedPromptIds.clear();pool=prompts.filter(p=>diffs.includes(p.d))}return pool[Math.floor(Math.random()*pool.length)]}
+
+
+const LOG_KEY='clothingSortLogsV1';
+function loadLogs(){
+  try{return JSON.parse(localStorage.getItem(LOG_KEY)||'[]')}catch(e){return []}
+}
+function saveLogs(logs){
+  try{localStorage.setItem(LOG_KEY,JSON.stringify(logs))}catch(e){}
+  updateLogUi();
+}
+function nowIso(){return new Date().toISOString()}
+function makeId(prefix='s'){
+  return prefix+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+}
+function cardSnapshot(card){
+  return card?{id:card.id,color:card.color,type:card.type,pattern:card.pattern}:null;
+}
+function beginSetLog(){
+  state.log={
+    logVersion:1,
+    sessionId:state.sessionId,
+    setId:makeId('set'),
+    setNo:state.setNo,
+    startedAt:nowIso(),
+    mode:state.mode,
+    cpuDifficulty:state.mode==='cpu'?state.cpuDifficulty:null,
+    duration:state.duration,
+    prompt:{id:state.prompt.id,difficulty:state.prompt.d},
+    actions:[],
+    initialDeckOrder:{
+      A:state.players.A?state.players.A.deck.map(c=>c.id):[],
+      B:state.players.B?state.players.B.deck.map(c=>c.id):[]
+    }
+  };
+}
+function logAction(player,type,extra={}){
+  if(!state.log)return;
+  state.log.actions.push({
+    t:Math.max(0,state.duration-state.timeLeft),
+    remainingTime:state.timeLeft,
+    at:nowIso(),
+    player,
+    type,
+    ...extra
+  });
+}
+function finalizeSetLog(reason,a,b,winner){
+  if(!state.log)return;
+  state.log.endedAt=nowIso();
+  state.log.endReason=reason;
+  state.log.bonusOwner=state.bonusOwner;
+  state.log.result={
+    A:a,B:b,
+    setWinner:winner,
+    setWins:{...state.setWins}
+  };
+  const logs=loadLogs();
+  logs.push(state.log);
+  saveLogs(logs);
+  state.log=null;
+}
+function updateLogUi(){
+  const logs=loadLogs();
+  const sessions=new Set(logs.map(x=>x.sessionId).filter(Boolean));
+  const actions=logs.reduce((n,x)=>n+(x.actions?.length||0),0);
+  const lc=document.getElementById('logCount'); if(lc)lc.textContent=logs.length;
+  const ls=document.getElementById('logSets'); if(ls)ls.textContent=logs.length;
+  const lm=document.getElementById('logMatches'); if(lm)lm.textContent=sessions.size;
+  const la=document.getElementById('logActions'); if(la)la.textContent=actions;
+}
+function downloadText(filename,text,type='application/json'){
+  const blob=new Blob([text],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportLogsJson(){
+  const logs=loadLogs();
+  downloadText(`衣類仕分けコンベア_プレイログ_${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(logs,null,2));
+}
+function csvEscape(v){
+  const s=String(v??'');
+  return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function exportLogsCsv(){
+  const logs=loadLogs();
+  const head=['sessionId','setId','setNo','startedAt','mode','cpuDifficulty','duration','promptId','promptDifficulty','bonusOwner','winner',
+              'A_score','A_wrong','A_1pt','A_2pt','A_3pt','A_unplaced','A_skips',
+              'B_score','B_wrong','B_1pt','B_2pt','B_3pt','B_unplaced','B_skips','endReason','actions'];
+  const rows=[head.join(',')];
+  for(const x of logs){
+    const A=x.result?.A||{},B=x.result?.B||{};
+    const row=[
+      x.sessionId,x.setId,x.setNo,x.startedAt,x.mode,x.cpuDifficulty||'',x.duration,x.prompt?.id,x.prompt?.difficulty,x.bonusOwner||'',x.result?.setWinner||'',
+      A.pts,A.wrong,A.c1,A.c2,A.c3,A.unplaced,A.skips??'',
+      B.pts,B.wrong,B.c1,B.c2,B.c3,B.unplaced,B.skips??'',x.endReason,x.actions?.length||0
+    ];
+    rows.push(row.map(csvEscape).join(','));
+  }
+  downloadText(`衣類仕分けコンベア_プレイログ要約_${new Date().toISOString().slice(0,10)}.csv`,rows.join('\n'),'text/csv;charset=utf-8');
+}
+
+let setupLock=false;
+function setupGame(newMatch=true){
+  if(setupLock)return;
+  setupLock=true;
+  setTimeout(()=>setupLock=false,700);
+  state.mode=document.querySelector('input[name=mode]:checked').value;
+  state.duration=Number(document.querySelector('input[name=time]:checked').value);
+  state.cpuDifficulty=(document.querySelector('input[name=cpuDifficulty]:checked')||{value:'normal'}).value;
+  if(!selectedDiffs().length){toast('お題を1色以上選んでください');return}
+  if(newMatch){state.setNo=1;state.setWins={A:0,B:0};state.usedPromptIds.clear();state.sessionId=makeId('session')}
+  startSet();
+}
+function startSet(){
+  clearInterval(state.timerId);
+  clearTimeout(state.cpuTimer);
+  clearTimeout(state.cpuClaimTimer);
+  state.timeLeft=state.duration;state.running=true;state.bonusOwner=null;initPlayerKeys();
+  state.prompt=choosePrompt();state.usedPromptIds.add(state.prompt.id);
+  if(state.mode==='solo') state.players.B={deck:[],placed:[],finished:true,declaredAt:0,skips:0,bonus:false};
+  beginSetLog();
+  document.getElementById('menu').classList.remove('active');document.getElementById('game').classList.add('active');
+  document.getElementById('zoneA').classList.toggle('hidden',state.mode==='solo');
+  document.getElementById('bonusWrap').classList.toggle('hidden',state.mode==='solo');
+  document.querySelector('#zoneA .p-name').textContent=state.mode==='cpu'?`CPU（${CPU_PROFILE[state.cpuDifficulty].label}）`:'PLAYER A';
+  document.querySelector('#zoneB .p-name').textContent=state.mode==='solo'?'SCORE ATTACK':'PLAYER B';
+  updateAll();
+  requestWakeLock();
+  document.body.classList.add('game-running');
+  if(state.mode==='cpu') scheduleCpuMove(true);
+  state.timerId=setInterval(()=>{state.timeLeft--;updateTimer();if(state.timeLeft<=0)endByTime()},1000);
+}
+function updateTimer(){document.getElementById('timer').textContent=state.timeLeft;document.getElementById('setScore').textContent=['versus','cpu'].includes(state.mode)?`SET ${state.setNo}｜A ${state.setWins.A} - ${state.setWins.B} B`:'SCORE ATTACK'}
+function updateAll(){updateTimer();document.getElementById('promptCard').innerHTML=renderPrompt(state.prompt);updatePlayer('A');updatePlayer('B');updateBonus();}
+function updatePlayer(k){const p=state.players[k];const cardEl=document.getElementById('card'+k);if(cardEl)cardEl.innerHTML=renderCard(currentCard(p));const stats=document.getElementById('stats'+k);if(stats)stats.innerHTML=`<span>山札 ${p.deck.length}</span><span>配置 ${p.placed.length}</span><span>底送り ${p.skips}</span>${p.finished?'<span>終了</span>':''}`;document.querySelectorAll(`[data-player="${k}"]`).forEach(btn=>{const cpuLocked=state.mode==='cpu'&&k==='A';btn.disabled=cpuLocked||!state.running||p.finished||(!currentCard(p)&&btn.dataset.action!=='finish');if(btn.dataset.action==='finish')btn.classList.toggle('ready',!cpuLocked&&state.running&&!p.finished)});}
+function updateBonus(){const tok=document.getElementById('bonusToken');tok.classList.toggle('claimed',!!state.bonusOwner);for(const k of ['A','B']){const b=document.querySelector(`[data-claim="${k}"]`);b.disabled=!!state.bonusOwner||!state.players[k]||!state.players[k].finished||!state.running;b.classList.toggle('enabled',!b.disabled)}const st=document.getElementById('claimStatus');st.textContent=state.bonusOwner?`${state.bonusOwner} が＋3点`:'終了後に取る';}
+function rnd(min,max){return min+Math.random()*(max-min)}
+function chooseCpuLane(card,profile){
+  const matches=[1,2,3].filter(pt=>evalCond(state.prompt['c'+pt],card));
+  if(!matches.length) return 'skip';
+
+  // 難易度ごとの「高得点まで確認する」傾向
+  let chosen;
+  if(Math.random()<profile.highScoreBias){
+    chosen=Math.max(...matches);
+  }else{
+    // 低難度ほど「置けるところへ早く置く」傾向
+    const sorted=matches.slice().sort((a,b)=>a-b);
+    chosen=sorted[Math.floor(Math.random()*sorted.length)];
+  }
+
+  // 認識ミス：条件外レーンに置くことがある
+  if(Math.random()<profile.mistakeRate){
+    const wrong=[1,2,3].filter(pt=>!matches.includes(pt));
+    if(wrong.length) chosen=wrong[Math.floor(Math.random()*wrong.length)];
+  }
+  return String(chosen);
+}
+function shouldCpuFinish(profile,p){
+  if(!p || p.finished) return false;
+  // 終盤は「残り枚数」と「残り時間」で終了ボーナスを狙う
+  if(p.deck.length<=profile.finishDeck) return true;
+  if(state.timeLeft<=profile.finishTime && p.deck.length<=7) return true;
+  return false;
+}
+function scheduleCpuMove(initial=false){
+  clearTimeout(state.cpuTimer);
+  if(!state.running||state.mode!=='cpu') return;
+  const p=state.players.A;
+  if(!p||p.finished) return;
+  const profile=CPU_PROFILE[state.cpuDifficulty];
+
+  let delay=rnd(profile.thinkMin,profile.thinkMax);
+  if(initial) delay+=450;
+
+  state.cpuTimer=setTimeout(()=>{
+    if(!state.running||state.mode!=='cpu'||p.finished) return;
+
+    if(shouldCpuFinish(profile,p)){
+      cpuFinish();
+      return;
+    }
+
+    const card=currentCard(p);
+    if(!card){
+      cpuFinish();
+      return;
+    }
+
+    const action=chooseCpuLane(card,profile);
+    act('A',action,true);
+    scheduleCpuMove(false);
+  },delay);
+}
+function cpuFinish(){
+  if(!state.running||state.mode!=='cpu') return;
+  const p=state.players.A;
+  if(!p||p.finished) return;
+  act('A','finish',true);
+
+  // CPUも宣言後に中央トークンを取りに行く。難易度で反応速度が変わる。
+  const profile=CPU_PROFILE[state.cpuDifficulty];
+  clearTimeout(state.cpuClaimTimer);
+  state.cpuClaimTimer=setTimeout(()=>{
+    if(state.running && state.mode==='cpu' && !state.bonusOwner && p.finished) claim('A',true);
+  },rnd(profile.claimMin,profile.claimMax));
+}
+
+function act(k,action,internal=false){if(!state.running)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||p.finished)return;const card=currentCard(p);
+  if(action==='finish'){
+    logAction(k,'finish',{deckRemaining:p.deck.length,placed:p.placed.length,skips:p.skips});
+    p.finished=true;p.declaredAt=performance.now();toast(`${k==='A'?'A':'B'}：「仕分け終了！」`);updatePlayer(k);updateBonus();if(state.mode==='solo'){p.bonus=true;state.bonusOwner=k;finishSet('soloFinish')}return
+  }
+  if(!card)return;
+  if(action==='skip'){
+    logAction(k,'skip',{card:cardSnapshot(card),deckRemainingBefore:p.deck.length});
+    p.deck.push(p.deck.shift());p.skips++;updatePlayer(k);return
+  }
+  const point=Number(action);
+  const correct=evalCond(state.prompt['c'+point],card);
+  logAction(k,'place',{card:cardSnapshot(card),point,correct,deckRemainingBefore:p.deck.length});
+  p.deck.shift();p.placed.push({card,point,correct});updatePlayer(k);
+}
+function claim(k,internal=false){if(!state.running||!['versus','cpu'].includes(state.mode)||state.bonusOwner)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||!p.finished)return;logAction(k,'claimBonus',{bonus:3});state.bonusOwner=k;p.bonus=true;toast(`${k} が給料ボーナス＋3点！`);updateBonus();if(state.players.A.finished&&state.players.B.finished)finishSet('bothFinished')}
+function endByTime(){if(!state.running)return;logAction(null,'timeUp',{});for(const k of ['A','B']) if(state.players[k]) state.players[k].finished=true;finishSet('time')}
+function calc(p){let pts=0,wrong=0,c1=0,c2=0,c3=0;for(const x of p.placed){if(x.correct){pts+=x.point;if(x.point===1)c1++;if(x.point===2)c2++;if(x.point===3)c3++;}else{pts-=2;wrong++}}if(p.bonus)pts+=3;return {pts,wrong,c1,c2,c3,bonus:p.bonus?3:0,unplaced:p.deck.length,placed:p.placed.length,skips:p.skips}}
+function finishSet(reason){if(!state.running)return;state.running=false;document.body.classList.remove('game-running');releaseWakeLock();clearInterval(state.timerId);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);updateAll();const a=calc(state.players.A),b=calc(state.players.B);let setWinner=null;
+  if(['versus','cpu'].includes(state.mode)){
+    if(a.pts>b.pts)setWinner='A';else if(b.pts>a.pts)setWinner='B';else if(a.wrong<b.wrong)setWinner='A';else if(b.wrong<a.wrong)setWinner='B';
+    if(setWinner)state.setWins[setWinner]++;
+  }
+  finalizeSetLog(reason,a,b,setWinner);showResult(a,b,setWinner,reason);
+}
+function scoreBox(name,s){return `<div class="scorebox"><h3>${name}</h3><div class="scoreline"><span>1点正解 × ${s.c1}</span><b>${s.c1}</b></div><div class="scoreline"><span>2点正解 × ${s.c2}</span><b>${s.c2*2}</b></div><div class="scoreline"><span>3点正解 × ${s.c3}</span><b>${s.c3*3}</b></div><div class="scoreline"><span>誤配置 × ${s.wrong}</span><b>−${s.wrong*2}</b></div><div class="scoreline"><span>給料ボーナス</span><b>＋${s.bonus}</b></div><div class="scoreline"><span>未配置</span><b>${s.unplaced}枚（0点）</b></div><div class="scoreline total"><span>合計</span><b>${s.pts}点</b></div></div>`}
+function showResult(a,b,winner,reason){const rc=document.getElementById('resultCard');let html=`<h2>仕分け結果</h2><div class="result-sub">お題 ${state.prompt.id}（${DIFF_LABEL[state.prompt.d]}）</div>`;
+  if(['versus','cpu'].includes(state.mode)){
+    const aName=state.mode==='cpu'?`CPU（${CPU_PROFILE[state.cpuDifficulty].label}）`:'PLAYER A';
+    html+=`<div class="score-grid">${scoreBox(aName,a)}${scoreBox('PLAYER B',b)}</div>`;
+    const winnerName=winner?(state.mode==='cpu'&&winner==='A'?'CPU':`PLAYER ${winner}`):'';const msg=winner?`このセットは ${winnerName}！`:'このセットは引き分け';html+=`<div class="winner">${msg}　｜　セット：A ${state.setWins.A} - ${state.setWins.B} B</div>`;
+    const matchWinner=state.setWins.A>=2?'A':state.setWins.B>=2?'B':null;
+    if(matchWinner){const matchName=state.mode==='cpu'&&matchWinner==='A'?'CPU':`PLAYER ${matchWinner}`;html+=`<div class="winner" style="background:#fff0cf;color:#7b5600">${matchName} がマッチ勝利！</div>`;}
+    html+=`<div class="result-actions"><button class="secondary" id="backSetup">設定へ</button>${matchWinner?'':'<button class="primary" id="nextSet">次のセット</button>'}<button class="primary" id="newMatch">新しいマッチ</button></div>`;
+  }else{
+    html+=`<div class="score-grid" style="grid-template-columns:1fr">${scoreBox('SCORE ATTACK',b)}</div><div class="winner">スコア ${b.pts}点</div><div class="result-actions"><button class="secondary" id="backSetup">設定へ</button><button class="primary" id="newMatch">もう一度</button></div>`;
+  }
+  rc.innerHTML=html;document.getElementById('resultOverlay').classList.remove('hidden');
+  const q=id=>document.getElementById(id);if(q('backSetup'))q('backSetup').onclick=goMenu;if(q('newMatch'))q('newMatch').onclick=()=>{q('resultOverlay').classList.add('hidden');setupGame(true)};if(q('nextSet'))q('nextSet').onclick=()=>{q('resultOverlay').classList.add('hidden');state.setNo++;startSet()};
+}
+function goMenu(){clearInterval(state.timerId);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);state.running=false;document.body.classList.remove('game-running');releaseWakeLock();document.getElementById('resultOverlay').classList.add('hidden');document.getElementById('game').classList.remove('active');document.getElementById('menu').classList.add('active')}
+let toastTimer;function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1200)}
+
+
+const cpuNoteText={
+  easy:'かんたん：ゆっくりめ。判断ミスがあり、1点・2点にも早めに置きます。',
+  normal:'ふつう：そこそこ速く、高得点も狙います。',
+  hard:'むずかしい：かなり速く、3点を強く狙い、ミスも少なめです。'
+};
+function updateCpuSetup(){
+  const mode=(document.querySelector('input[name=mode]:checked')||{value:'versus'}).value;
+  document.getElementById('cpuDifficultyBox').classList.toggle('hidden',mode!=='cpu');
+}
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',updateCpuSetup));
+document.querySelectorAll('input[name=cpuDifficulty]').forEach(r=>r.addEventListener('change',()=>{
+  document.getElementById('cpuDifficultyNote').textContent=cpuNoteText[r.value];
+}));
+updateCpuSetup();
+
+function haptic(ms=18){
+  try{if(navigator.vibrate)navigator.vibrate(ms)}catch(e){}
+}
+function isTouchDevice(){
+  return ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+}
+if(isTouchDevice())document.documentElement.classList.add('touch-device');
+
+// Prevent accidental context menu/selection on game controls
+document.getElementById('game').addEventListener('contextmenu',e=>e.preventDefault());
+
+// Keep screen awake while playing when supported
+let wakeLock=null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock' in navigator && state.running){
+      wakeLock=await navigator.wakeLock.request('screen');
+    }
+  }catch(e){}
+}
+async function releaseWakeLock(){
+  try{if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.running)requestWakeLock()});
+
+
+// Universal tap binding for iPhone Safari / WKWebView / in-app browsers.
+// We listen to touchend, pointerup and click, then suppress duplicates.
+function bindTap(el,handler,{prevent=true}={}){
+  if(!el)return;
+  let lastFire=0;
+  const fire=e=>{
+    const now=Date.now();
+    if(now-lastFire<500){
+      if(prevent && e && e.cancelable)e.preventDefault();
+      return;
+    }
+    lastFire=now;
+    if(prevent && e && e.cancelable)e.preventDefault();
+    handler(e);
+  };
+
+  el.addEventListener('touchend',fire,{passive:false});
+  if(window.PointerEvent)el.addEventListener('pointerup',fire,{passive:false});
+  el.addEventListener('click',fire,false);
+}
+
+// Expose a minimal fallback entry point for restrictive embedded browsers.
+window.__clothingSortStart=()=>setupGame(true);
+
+const startBtn=document.getElementById('startBtn');
+bindTap(startBtn,()=>{
+  haptic(18);
+  // Delaying one tick avoids some iOS/WKWebView cases where a touch event
+  // is cancelled during the same event dispatch.
+  setTimeout(()=>window.__clothingSortStart(),0);
+},{prevent:false});
+
+bindTap(document.getElementById('menuBtn'),goMenu,{prevent:false});
+bindTap(document.getElementById('rulesBtn'),()=>document.getElementById('rulesModal').classList.remove('hidden'),{prevent:false});
+bindTap(document.getElementById('closeRules'),()=>document.getElementById('rulesModal').classList.add('hidden'),{prevent:false});
+bindTap(document.getElementById('logBtn'),()=>{updateLogUi();document.getElementById('logModal').classList.remove('hidden')},{prevent:false});
+bindTap(document.getElementById('closeLogBtn'),()=>document.getElementById('logModal').classList.add('hidden'),{prevent:false});
+bindTap(document.getElementById('exportJsonBtn'),exportLogsJson,{prevent:false});
+bindTap(document.getElementById('exportCsvBtn'),exportLogsCsv,{prevent:false});
+bindTap(document.getElementById('clearLogBtn'),()=>{
+  if(confirm('保存されているプレイログをすべて削除しますか？')){
+    localStorage.removeItem(LOG_KEY);updateLogUi();toast('ログを削除しました');
+  }
+},{prevent:false});
+
+document.querySelectorAll('.act').forEach(b=>{
+  bindTap(b,()=>{
+    if(b.disabled)return;
+    haptic(12);
+    act(b.dataset.player,b.dataset.action);
+  });
+});
+
+document.querySelectorAll('.claim-half').forEach(b=>{
+  bindTap(b,()=>{
+    if(b.disabled)return;
+    haptic(28);
+    claim(b.dataset.claim);
+  });
+});
+
+document.getElementById('logModal').addEventListener('click',e=>{if(e.target.id==='logModal')e.currentTarget.classList.add('hidden')});
+document.getElementById('rulesModal').addEventListener('click',e=>{if(e.target.id==='rulesModal')e.currentTarget.classList.add('hidden')});
+updateLogUi();
+
+
+// Keyboard helper for desktop testing: A: Q/W/E/R/T, B: 1/2/3/0/Enter; token A=Y B=Space
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+window.addEventListener('keydown',e=>{if(!state.running)return;const k=e.key.toLowerCase();const mapA={q:'1',w:'2',e:'3',r:'skip',t:'finish'};const mapB={'1':'1','2':'2','3':'3','0':'skip','enter':'finish'};if(state.mode!=='cpu'&&mapA[k])act('A',mapA[k]);if(mapB[k])act('B',mapB[k]);if(state.mode!=='cpu'&&k==='y')claim('A');if(k===' ')claim('B')});
+})();
+</script>
+</body>
+</html>
