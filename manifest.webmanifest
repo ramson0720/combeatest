@@ -1,7 +1,6 @@
 {
-  "name": "衣類仕分けコンベア",
-  "short_name": "衣類仕分け",
-  "description": "衣類を1点・2点・3点レーンへ高速仕分けするゲーム",
+  "name": "SORT! 1・2・3！ ― クローゼットでワケワケ！ ―",
+  "short_name": "SORT! 1・2・3！",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -9,22 +8,8 @@
     "standalone",
     "fullscreen"
   ],
-  "background_color": "#eef2f7",
-  "theme_color": "#183b66",
-  "lang": "ja",
-  "orientation": "any",
-  "icons": [
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+  "orientation": "landscape",
+  "background_color": "#eaf6ff",
+  "theme_color": "#1f78ef",
+  "lang": "ja"
 }
