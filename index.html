@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="SORT! 1・2・3！" />
 <title>SORT! 1・2・3！ ― クローゼットでワケワケ！ ―</title>
 <!-- TITLE_SCREEN: ATTACHED_IMAGE_EXACT_V1 -->
-<!-- PLAY_SCREEN: CPU_ONLY_LANDSCAPE_V4_PROMPT_UI -->
+<!-- PLAY_SCREEN: CPU_ONLY_LANDSCAPE_V5_ROTATE_SFX -->
 <!-- Landscape one-screen build -->
 <style>:root{
   --ink:#18314f;--paper:#fffdfa;--line:#d9e3ef;--soft:#f7fbff;
@@ -1107,6 +1107,36 @@ body.result-open .result-card{
   body.result-open .result-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
 
+
+
+/* ===== V5 PORTRAIT DEVICE -> ROTATED LANDSCAPE APP ===== */
+@media (orientation: portrait){
+  html,body{width:100vw!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;background:#eaf6ff!important}
+  #menu.screen.active,#game.screen.active{position:fixed!important;left:100vw!important;top:0!important;width:100dvh!important;height:100vw!important;min-height:0!important;transform:rotate(90deg)!important;transform-origin:0 0!important;overflow:hidden!important}
+  #game .game-fit{width:100%!important;height:100%!important;min-height:0!important}
+  #menu.image-title-screen .title-image-stage{height:100%!important;width:auto!important;max-width:100%!important;aspect-ratio:3/2!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important}
+  #menu.image-title-screen .setup-panel{width:min(720px,88%)!important;max-height:92%!important}
+  body.result-open .result-overlay,.rules-modal:not(.hidden),.log-modal:not(.hidden){position:fixed!important;inset:auto!important;left:100vw!important;top:0!important;width:100dvh!important;height:100vw!important;max-width:none!important;max-height:none!important;transform:rotate(90deg)!important;transform-origin:0 0!important;overflow:hidden!important}
+  body.result-open .result-card{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;padding:5px 7px!important;gap:4px!important;border-radius:14px!important}
+  .rules-modal:not(.hidden) .modal-box,.log-modal:not(.hidden) .log-box{max-width:min(760px,92%)!important;max-height:92%!important;overflow:auto!important}
+  body.result-open .result-headline{min-height:28px!important;gap:6px!important}
+  body.result-open .result-title-wrap h2{font-size:22px!important}
+  body.result-open .result-prompt,body.result-open .result-set-progress{font-size:11px!important}
+  body.result-open .result-round-badge{font-size:12px!important;padding:4px 12px!important}
+  body.result-open .result-duel{gap:5px!important;grid-template-columns:minmax(0,1fr) minmax(105px,16%) minmax(0,1fr)!important}
+  body.result-open .result-player{border-width:2px!important;border-radius:13px!important;padding:4px 6px 5px!important;grid-template-rows:auto minmax(0,1fr)!important}
+  body.result-open .result-player-name{font-size:18px!important}
+  body.result-open .result-total{font-size:36px!important}
+  body.result-open .result-breakdown{gap:2px 5px!important;margin-top:1px!important}
+  body.result-open .result-stat{padding:2px 4px!important;border-radius:6px!important;font-size:10px!important}
+  body.result-open .result-center{gap:4px!important;padding:2px!important}
+  body.result-open .result-vs{font-size:26px!important}
+  body.result-open .result-verdict{font-size:15px!important;padding:5px 3px!important;border-radius:10px!important}
+  body.result-open .result-match{font-size:10px!important}
+  body.result-open .result-actions{min-height:36px!important;gap:5px!important}
+  body.result-open .result-actions button{min-height:36px!important;padding:4px 7px!important;border-radius:9px!important;font-size:13px!important}
+}
+
 </style>
 </head>
 <body data-mode="menu">
@@ -1297,14 +1327,14 @@ body.result-open .result-card{
 const GAME_DESIGN_W=1536, GAME_DESIGN_H=864;
 function fitGameStage(){
   const stage=document.getElementById('gameStage');
-  if(!stage)return;
-  const vv=window.visualViewport;
-  const w=vv?vv.width:window.innerWidth;
-  const h=vv?vv.height:window.innerHeight;
-  const s=Math.min(w/GAME_DESIGN_W,h/GAME_DESIGN_H);
-  stage.style.transform=`scale(${s})`;
-  stage.style.left=`${Math.max(0,(w-GAME_DESIGN_W*s)/2)}px`;
-  stage.style.top=`${Math.max(0,(h-GAME_DESIGN_H*s)/2)}px`;
+  const fit=document.getElementById('gameFit');
+  if(!stage||!fit)return;
+  const w=Math.max(1,fit.clientWidth);
+  const h=Math.max(1,fit.clientHeight);
+  const scale=Math.min(w/GAME_DESIGN_W,h/GAME_DESIGN_H);
+  stage.style.transform=`scale(${scale})`;
+  stage.style.left=`${Math.max(0,(w-GAME_DESIGN_W*scale)/2)}px`;
+  stage.style.top=`${Math.max(0,(h-GAME_DESIGN_H*scale)/2)}px`;
 }
 window.addEventListener('resize',fitGameStage,{passive:true});
 window.addEventListener('orientationchange',()=>setTimeout(fitGameStage,80),{passive:true});
@@ -1347,6 +1377,57 @@ const CPU_PROFILE={
 
 
 const leaf=(kind,value)=>({kind,value});
+// ===== Web Audio SFX =====
+// 正解/不正解はゲーム終了まで伏せるため、仕分け音は操作フィードバックのみ。
+let audioCtx=null;
+let audioReady=false;
+function ensureAudio(){
+  try{
+    if(!audioCtx){
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return null;
+      audioCtx=new AC();
+    }
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    audioReady=true;
+    return audioCtx;
+  }catch(e){return null}
+}
+function tone(freq=440,dur=.08,vol=.05,type='sine',delay=0,endFreq=null){
+  const ctx=ensureAudio();if(!ctx||!audioReady)return;
+  const now=ctx.currentTime+delay;
+  const osc=ctx.createOscillator();const gain=ctx.createGain();
+  osc.type=type;osc.frequency.setValueAtTime(freq,now);
+  if(endFreq)osc.frequency.exponentialRampToValueAtTime(Math.max(30,endFreq),now+dur);
+  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),now+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+dur);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+dur+.025);
+}
+function noiseBurst(dur=.07,vol=.025,delay=0){
+  const ctx=ensureAudio();if(!ctx||!audioReady)return;
+  const length=Math.max(1,Math.floor(ctx.sampleRate*dur));const buffer=ctx.createBuffer(1,length,ctx.sampleRate);const data=buffer.getChannelData(0);
+  for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
+  const src=ctx.createBufferSource();src.buffer=buffer;const gain=ctx.createGain();const now=ctx.currentTime+delay;
+  gain.gain.setValueAtTime(vol,now);gain.gain.exponentialRampToValueAtTime(.0001,now+dur);src.connect(gain);gain.connect(ctx.destination);src.start(now);src.stop(now+dur+.02);
+}
+function sfx(name,arg){
+  if(!ensureAudio())return;
+  switch(name){
+    case 'tap':tone(520,.055,.032,'sine');break;
+    case 'count':tone(600,.085,.055,'square');break;
+    case 'countLast':tone(720,.10,.06,'square');break;
+    case 'go':tone(880,.12,.065,'triangle');tone(1320,.16,.045,'triangle',.07);break;
+    case 'place':{const f=arg===1?520:arg===2?620:740;noiseBurst(.045,.018);tone(f,.075,.045,'triangle',.015,f*1.12);break;}
+    case 'skip':noiseBurst(.09,.022);tone(310,.12,.04,'triangle',0,170);break;
+    case 'finish':tone(620,.10,.05,'triangle');tone(830,.11,.055,'triangle',.08);tone(1100,.16,.05,'triangle',.16);break;
+    case 'cpuFinish':tone(460,.09,.03,'sine');tone(580,.11,.03,'sine',.08);break;
+    case 'bonus':tone(880,.09,.05,'triangle');tone(1175,.11,.05,'triangle',.075);tone(1568,.18,.055,'triangle',.15);break;
+    case 'timeup':tone(440,.12,.05,'square');tone(330,.17,.05,'square',.12);break;
+    case 'win':tone(660,.10,.05,'triangle');tone(880,.12,.055,'triangle',.09);tone(1320,.22,.06,'triangle',.19);break;
+    case 'lose':tone(440,.12,.04,'triangle');tone(330,.18,.04,'triangle',.11);break;
+    case 'draw':tone(520,.11,.04,'sine');tone(520,.11,.04,'sine',.13);break;
+  }
+}
+
 const C=v=>leaf('color',v), T=v=>leaf('type',v), P=v=>leaf('pattern',v);
 const AND=(...args)=>({kind:'and',args});
 const OR=(...args)=>({kind:'or',args});
@@ -1660,12 +1741,14 @@ function startSet(){
   updateAll();
   requestWakeLock();
   document.body.classList.add('game-running');
+  sfx('count'); // 5
 
   state.prepTimer=setInterval(()=>{
     state.prepLeft--;
     if(state.prepLeft<=0){
       clearInterval(state.prepTimer);
       state.preparing=false;
+      sfx('go');
       logAction(null,'sortingStart',{memorizationSeconds:5});
       updateAll();
       if(state.mode==='cpu') scheduleCpuMove(true);
@@ -1675,6 +1758,7 @@ function startSet(){
         if(state.timeLeft<=0)endByTime();
       },1000);
     }else{
+      sfx(state.prepLeft===1?'countLast':'count');
       updateAll();
     }
   },1000);
@@ -1793,11 +1877,13 @@ function cpuFinish(){
 
 function act(k,action,internal=false){if(!state.running||state.preparing)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||p.finished)return;const card=currentCard(p);
   if(action==='finish'){
+    if(internal)sfx('cpuFinish');else sfx('finish');
     logAction(k,'finish',{deckRemaining:p.deck.length,placed:p.placed.length,skips:p.skips});
     p.finished=true;p.declaredAt=performance.now();showFinishMarquee(`${k==='A'?(state.mode==='cpu'?'CPU':'相手'):'あなた'}　仕分け終了！`);updatePlayer(k);updateBonus();if(state.mode==='solo'){p.bonus=true;state.bonusOwner=k;finishSet('soloFinish')}return
   }
   if(!card)return;
   if(action==='skip'){
+    if(!internal)sfx('skip');
     logAction(k,'skip',{card:cardSnapshot(card),deckRemainingBefore:p.deck.length});
     // 底送りしたカードは除外しない。山札の最後尾へ回し、
     // 一周して再び一番上に来たら何度でも選択できる。
@@ -1808,12 +1894,13 @@ function act(k,action,internal=false){if(!state.running||state.preparing)return;
     return
   }
   const point=Number(action);
+  if(!internal)sfx('place',point);
   const correct=evalCond(state.prompt['c'+point],card);
   logAction(k,'place',{card:cardSnapshot(card),point,correct,deckRemainingBefore:p.deck.length});
   p.deck.shift();p.placed.push({card,point,correct});updatePlayer(k);
 }
-function claim(k,internal=false){if(!state.running||state.preparing||!['versus','cpu'].includes(state.mode)||state.bonusOwner)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||!p.finished)return;logAction(k,'claimBonus',{bonus:3});state.bonusOwner=k;p.bonus=true;toast(`${k} が給料ボーナス＋3点！`);updateBonus();if(state.players.A.finished&&state.players.B.finished)finishSet('bothFinished')}
-function endByTime(){if(!state.running)return;logAction(null,'timeUp',{});for(const k of ['A','B']) if(state.players[k]) state.players[k].finished=true;finishSet('time')}
+function claim(k,internal=false){if(!state.running||state.preparing||!['versus','cpu'].includes(state.mode)||state.bonusOwner)return;if(state.mode==='cpu'&&k==='A'&&!internal)return;const p=state.players[k];if(!p||!p.finished)return;logAction(k,'claimBonus',{bonus:3});state.bonusOwner=k;p.bonus=true;sfx('bonus');toast(`${k} が給料ボーナス＋3点！`);updateBonus();if(state.players.A.finished&&state.players.B.finished)finishSet('bothFinished')}
+function endByTime(){if(!state.running)return;sfx('timeup');logAction(null,'timeUp',{});for(const k of ['A','B']) if(state.players[k]) state.players[k].finished=true;finishSet('time')}
 function calc(p){let pts=0,wrong=0,c1=0,c2=0,c3=0;for(const x of p.placed){if(x.correct){pts+=x.point;if(x.point===1)c1++;if(x.point===2)c2++;if(x.point===3)c3++;}else{pts-=2;wrong++}}if(p.bonus)pts+=3;return {pts,wrong,c1,c2,c3,bonus:p.bonus?3:0,unplaced:p.deck.length,placed:p.placed.length,skips:p.skips}}
 function finishSet(reason){if(!state.running)return;state.running=false;document.body.classList.remove('game-running');releaseWakeLock();clearInterval(state.timerId);clearInterval(state.prepTimer);clearTimeout(state.cpuTimer);clearTimeout(state.cpuClaimTimer);updateAll();const a=calc(state.players.A),b=calc(state.players.B);let setWinner=null;
   if(['versus','cpu'].includes(state.mode)){
@@ -1836,6 +1923,7 @@ function resultPlayerBox(name,s,side){
   </section>`;
 }
 function showResult(a,b,winner,reason){
+  sfx(winner==='B'?'win':winner==='A'?'lose':'draw');
   const rc=document.getElementById('resultCard');
   const matchWinner=state.setWins.A>=2?'A':state.setWins.B>=2?'B':null;
   const verdict=winner==='B'?'あなたの勝ち！':winner==='A'?'CPUの勝ち':'引き分け';
@@ -2043,6 +2131,8 @@ window.__clothingSortStart=()=>setupGame(true);
 
 const startBtn=document.getElementById('startBtn');
 bindTap(startBtn,()=>{
+  ensureAudio();
+  sfx('tap');
   haptic(18);
   requestLandscapeLock();
   // Delaying one tick avoids some iOS/WKWebView cases where a touch event
