@@ -857,33 +857,40 @@ body.game-running{overflow:hidden!important;touch-action:manipulation!important}
 /* CPU対戦専用。設定画面のモード選択は不要 */
 #settingsArea .setup-box:first-child{display:none!important}
 
-/* 仕分け条件：アイコンを大きくし、視認性優先 */
-.condition-board{left:165px!important;width:1210px!important}
-.condition-board .prompt-panel-body{padding:4px 7px 6px!important;gap:1px!important}
+/* 仕分け条件：アイコンをかなり大きくし、視認性優先 */
+.condition-board{left:165px!important;width:1210px!important;height:244px!important}
+.condition-board .prompt-panel-body{padding:8px 10px 8px!important;gap:5px!important}
 .condition-board .prompt-icons{
-  min-height:72px!important;
-  height:72px!important;
-  gap:13px!important;
+  min-height:96px!important;
+  height:96px!important;
+  gap:16px!important;
   transform:none!important;
   width:100%!important;
   margin:0!important;
   overflow:visible!important;
+  flex-wrap:wrap!important;
 }
-.condition-board .token-icon{width:64px!important;height:64px!important}
-.condition-board .token-icon svg{width:64px!important;height:64px!important}
-.condition-board .exact-icon{width:70px!important;height:70px!important;border-radius:13px!important}
-.condition-board .exact-icon svg{width:64px!important;height:64px!important}
-.condition-board .crayon{width:62px!important;height:44px!important}
-.condition-board .crayon i{width:54px!important;height:9px!important;border-radius:8px!important}
-.condition-board .crayon i:nth-child(1){top:4px!important}
-.condition-board .crayon i:nth-child(2){top:17px!important}
-.condition-board .crayon i:nth-child(3){top:30px!important}
-.condition-board .pat{width:58px!important;height:58px!important;border-width:4px!important}
-.condition-board .pat.star:before{font-size:43px!important;line-height:50px!important}
-.condition-board .not-mark{width:25px!important;height:25px!important;font-size:17px!important;right:-5px!important;top:-6px!important}
-.condition-board .op{font-size:31px!important}
-.condition-board .or{font-size:17px!important;padding:3px 9px!important}
-.condition-board .prompt-caption{font-size:15px!important;margin-top:0!important}
+.condition-board .icon-seq{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;flex-wrap:wrap!important}
+.condition-board .token-icon{width:86px!important;height:86px!important}
+.condition-board .token-icon svg{width:86px!important;height:86px!important}
+.condition-board .exact-icon{width:94px!important;height:94px!important;border-radius:16px!important}
+.condition-board .exact-icon svg{width:84px!important;height:84px!important}
+.condition-board .crayon{width:82px!important;height:58px!important}
+.condition-board .crayon i{width:72px!important;height:11px!important;border-radius:10px!important}
+.condition-board .crayon i:nth-child(1){top:6px!important}
+.condition-board .crayon i:nth-child(2){top:23px!important}
+.condition-board .crayon i:nth-child(3){top:40px!important}
+.condition-board .pat{width:78px!important;height:78px!important;border-width:5px!important}
+.condition-board .pat.star:before{font-size:56px!important;line-height:66px!important}
+.condition-board .negative .neg-line{height:12px!important;border-width:3px!important}
+.condition-board .op{font-size:34px!important}
+.condition-board .or{font-size:19px!important;padding:4px 11px!important}
+.condition-board .prompt-caption{font-size:16px!important;margin-top:0!important;line-height:1.15!important}
+
+.not-wrap.negative{position:relative;display:inline-grid;place-items:center;isolation:isolate}
+.not-wrap.negative .neg-line{position:absolute;left:50%;top:50%;width:112%;height:10px;background:#f3434d;border:2px solid #fff;border-radius:999px;box-shadow:0 2px 4px rgba(0,0,0,.12);z-index:4;transform-origin:center center}
+.not-wrap.negative .neg-line-a{transform:translate(-50%,-50%) rotate(45deg)}
+.not-wrap.negative .neg-line-b{transform:translate(-50%,-50%) rotate(-45deg)}
 
 /* 自分側を広く。CPU側は残り山札だけ分かる最小表示 */
 .self-board{left:55px!important;width:1245px!important}
@@ -1247,22 +1254,32 @@ for(const color of ['red','yellow','blue']) for(const type of ['shirt','pants','
 function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
 function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 
+let svgUid=0;
 function typeSvg(type,color='#59616d',pattern='plain',fullColor=null){
-  const c=fullColor||color; const stroke='#111820';
-  let patternDefs=''; let fill=c;
+  const c=fullColor||color;
+  const stroke='#111820';
+  const strokeWidth=4.8;
+  const patternId='chk_'+(++svgUid);
+  let defs='';
+  let fill=c;
   if(pattern==='check'){
-    patternDefs=`<defs><pattern id="chk" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="${c}"/><rect width="6" height="6" fill="#fff" opacity=".30"/><rect x="6" y="6" width="6" height="6" fill="#fff" opacity=".30"/><path d="M0 6H12M6 0V12" stroke="#fff" stroke-opacity=".25" stroke-width="1.5"/></pattern></defs>`; fill='url(#chk)';
+    defs=`<defs><pattern id="${patternId}" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="${c}"/><rect width="7" height="7" fill="#fff" opacity=".34"/><rect x="7" y="7" width="7" height="7" fill="#fff" opacity=".34"/><path d="M0 7H14M7 0V14" stroke="#fff" stroke-opacity=".28" stroke-width="1.8"/></pattern></defs>`;
+    fill=`url(#${patternId})`;
   }
   let body='';
-  if(type==='shirt') body=`<path d="M29 20l14-8 9 8 14-8 14 8 12 22-17 10v34H25V52L8 42 20 20z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/><path d="M43 12c3 8 15 8 18 0" fill="none" stroke="${stroke}" stroke-width="4"/>`;
-  if(type==='pants') body=`<path d="M26 14h48l4 72H58L50 52 42 86H22l4-72z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/><path d="M27 25h46M50 14v20" fill="none" stroke="${stroke}" stroke-width="3"/>`;
-  if(type==='socks') body=`<path d="M19 15h29v34c0 13-10 30-29 37C9 90 2 82 8 73l17-20V15z" fill="${fill}" stroke="${stroke}" stroke-width="4"/><path d="M53 26h29v32c0 13-8 26-25 33-10 4-18-4-12-13l14-17V26z" fill="${fill}" stroke="${stroke}" stroke-width="4"/>`;
+  if(type==='shirt') body=`<path d="M31 23L42 15Q50 23 58 15L69 23L81 19L89 38L75 47L72 86H28L25 47L11 38L19 19Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round"/><path d="M41 18Q50 28 59 18" fill="none" stroke="${stroke}" stroke-width="4.2" stroke-linecap="round"/>`;
+  if(type==='pants') body=`<path d="M27 12H73L78 86H57L50 49L43 86H22L27 12Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round"/><path d="M29 24H71M50 12V47" fill="none" stroke="${stroke}" stroke-width="4" stroke-linecap="round"/>`;
+  if(type==='socks') body=`<path d="M22 16H43V48C43 61 34 76 18 84C8 89 2 81 8 72L22 56V16Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round"/><path d="M57 22H78V52C78 64 70 77 55 84C46 88 39 80 44 72L57 58V22Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round"/><path d="M22 27H43M57 33H78" fill="none" stroke="${stroke}" stroke-width="3.6" stroke-linecap="round"/>`;
   let stars='';
   if(pattern==='star'){
-    const pts= type==='socks' ? [[26,32],[34,48],[20,61],[66,45],[60,63],[72,73],[32,76],[76,34]] : type==='pants' ? [[35,34],[61,34],[31,53],[64,55],[35,73],[61,73]] : [[28,36],[51,31],[72,39],[38,55],[60,58],[28,72],[70,73]];
-    stars=pts.map(([x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">★</text>`).join('');
+    const pts = type==='socks'
+      ? [[28,33],[34,52],[20,63],[66,42],[61,61],[73,71]]
+      : type==='pants'
+      ? [[37,34],[62,35],[35,56],[64,59],[36,74],[61,75]]
+      : [[30,37],[50,31],[71,39],[37,56],[61,59],[31,73],[70,73]];
+    stars = pts.map(([x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="17" font-weight="900" fill="#fff">★</text>`).join('');
   }
-  return `<svg viewBox="0 0 100 100" aria-hidden="true">${patternDefs}${body}${stars}</svg>`;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${defs}${body}${stars}</svg>`;
 }
 function patternHtml(p){return `<span class="pat ${p}"></span>`}
 function crayonHtml(c){return `<span class="crayon ${c}"><i></i><i></i><i></i></span>`}
@@ -1275,7 +1292,7 @@ function renderCond(cond){
     case 'type': return miniTypeHtml(cond.value);
     case 'pattern': return patternHtml(cond.value);
     case 'exact': return fullExactHtml(cond.color,cond.type,cond.pattern);
-    case 'not': return `<span class="not-wrap">${renderCond(cond.arg)}<b class="not-mark">×</b></span>`;
+    case 'not': return `<span class="not-wrap negative">${renderCond(cond.arg)}<i class="neg-line neg-line-a"></i><i class="neg-line neg-line-b"></i></span>`;
     case 'and': return cond.args.map(renderCond).join('<span class="op">＋</span>');
     case 'or': return `<span class="icon-seq">${cond.args.map(renderCond).join('<span class="or">または</span>')}</span>`;
     case 'exactAny': return `<span class="icon-seq">${cond.args.map(renderCond).join('<span class="or">/</span>')}</span>`;
