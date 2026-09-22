@@ -1,13 +1,12 @@
-iPhoneからGitHubへ上げやすいように、全部同じ階層にした版です。
+SORT! 1・2・3！ プレイ画面コード実装版
 
-アップロードする6ファイル:
-- index.html
-- manifest.webmanifest
-- sw.js
-- icon-192.png
-- icon-512.png
-- apple-touch-icon.png
+・タイトル画面：前回の添付タイトル反映版を維持
+・プレイ画面：添付画像を背景画像として使わず、HTML/CSS/JSで再構成
+・スマホ横向き 16:9 基準の1536×864デザインを、表示領域に自動縮小
+・ゲーム中スクロール不要
+・お題、現在カード、残り枚数、1/2/3点、底送り、終了、CPU、ログ等は動的
+・得点は終了するまで非表示
+・相手の終了宣言は操作を塞がない流れる文字演出
 
-GitHubのcombeatestリポジトリで Add file → Upload files を開き、
-この6ファイルを全部選んでアップロードしてください。
-既存のindex.htmlがある場合は同名の新しいindex.htmlで置き換えてください。
+GitHub Pagesでは index.html だけ差し替えてください。
+ファイル内に PLAY_SCREEN: CODED_REFERENCE_LAYOUT_V2 があれば新版です。
