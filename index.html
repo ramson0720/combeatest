@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="SORT! 1・2・3！" />
 <title>SORT! 1・2・3！ ― クローゼットでワケワケ！ ―</title>
 <!-- TITLE_SCREEN: ATTACHED_IMAGE_EXACT_V1 -->
-<!-- PLAY_SCREEN: CPU_ONLY_LANDSCAPE_V3 -->
+<!-- PLAY_SCREEN: CPU_ONLY_LANDSCAPE_V4_PROMPT_UI -->
 <!-- Landscape one-screen build -->
 <style>:root{
   --ink:#18314f;--paper:#fffdfa;--line:#d9e3ef;--soft:#f7fbff;
@@ -957,6 +957,82 @@ body.game-running .game-fit{width:100%!important;height:100%!important;overflow:
   body.game-running .controls.primary-controls{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:128px 112px!important}
 }
 
+
+
+/* ===== V4 PROMPT / BONUS UI REFINEMENT ===== */
+/* お題は「大きいアイコン＋直下の文字」で瞬間判断しやすくする */
+.condition-board{
+  left:165px!important;top:102px!important;width:1210px!important;height:232px!important;
+  padding:35px 18px 13px!important;overflow:visible!important;
+}
+.condition-board .prompt-grid{height:178px!important;gap:10px!important;overflow:visible!important}
+.condition-board .prompt-panel{height:178px!important;overflow:visible!important;border-radius:16px!important}
+.condition-board .prompt-panel-head{height:47px!important;padding:4px 8px!important;font-size:24px!important}
+.condition-board .prompt-panel-body{
+  height:125px!important;min-height:125px!important;padding:7px 8px 5px!important;gap:2px!important;
+  overflow:visible!important;justify-content:center!important;
+}
+.condition-board .prompt-icons{
+  min-height:92px!important;height:auto!important;max-height:100px!important;
+  width:100%!important;margin:0!important;transform:none!important;overflow:visible!important;
+  display:flex!important;align-items:flex-start!important;justify-content:center!important;gap:4px!important;flex-wrap:nowrap!important;
+}
+.condition-board .prompt-caption{
+  display:block!important;max-width:96%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  font-size:12px!important;line-height:1.1!important;color:#52637b!important;margin-top:1px!important;
+}
+.logic-group{display:inline-flex;align-items:flex-start;justify-content:center;gap:4px;flex-wrap:nowrap;min-width:0}
+.logic-op{align-self:flex-start;margin-top:28px;font-size:24px;font-weight:1000;color:#303a49;line-height:1}
+.logic-op.or-word{font-size:12px;background:#fff;border:1.5px solid #cfd7e3;border-radius:999px;padding:4px 7px;margin-top:26px;color:#506078;white-space:nowrap}
+.cond-chip{display:inline-flex;flex-direction:column;align-items:center;justify-content:flex-start;width:74px;min-width:74px;gap:2px;overflow:visible}
+.cond-iconbox{position:relative;width:68px;height:68px;display:grid;place-items:center;overflow:visible}
+.cond-label{max-width:74px;min-height:18px;text-align:center;font-size:12px;line-height:1.05;font-weight:1000;color:#263a57;white-space:normal;word-break:keep-all}
+.cond-iconbox .token-icon,.cond-iconbox .pat,.cond-iconbox .exact-icon{transform:none!important;margin:0!important}
+.cond-iconbox .token-icon{width:66px!important;height:66px!important}
+.cond-iconbox .token-icon svg{width:66px!important;height:66px!important}
+.cond-iconbox .exact-icon{width:68px!important;height:68px!important;border-radius:13px!important}
+.cond-iconbox .exact-icon svg{width:64px!important;height:64px!important}
+.cond-iconbox .pat{width:62px!important;height:62px!important;border-width:4px!important}
+.cond-iconbox .pat.star:before{font-size:45px!important;line-height:54px!important}
+.cond-iconbox .crayon{width:64px!important;height:47px!important;margin-top:8px!important}
+.cond-iconbox .crayon i{width:56px!important;height:9px!important;border-radius:9px!important}
+.cond-iconbox .crayon i:nth-child(1){top:3px!important}.cond-iconbox .crayon i:nth-child(2){top:17px!important}.cond-iconbox .crayon i:nth-child(3){top:31px!important}
+/* 否定は小さなバッジではなく、対象アイコンそのものに赤い× */
+.cond-chip.negative .cond-iconbox:before,.cond-chip.negative .cond-iconbox:after{
+  content:"";position:absolute;left:50%;top:50%;width:76%;height:8px;background:#f23f4a;border:2px solid #fff;
+  border-radius:999px;box-shadow:0 2px 4px rgba(0,0,0,.16);z-index:8;transform-origin:center;
+}
+.cond-chip.negative .cond-iconbox:before{transform:translate(-50%,-50%) rotate(45deg)}
+.cond-chip.negative .cond-iconbox:after{transform:translate(-50%,-50%) rotate(-45deg)}
+/* 複雑なお題はアイコンを少しだけ詰め、切れないことを優先 */
+.prompt-panel.mid .cond-chip{width:66px;min-width:66px}.prompt-panel.mid .cond-label{max-width:66px;font-size:11px}.prompt-panel.mid .cond-iconbox{width:60px;height:60px}.prompt-panel.mid .cond-iconbox .token-icon,.prompt-panel.mid .cond-iconbox .token-icon svg{width:58px!important;height:58px!important}.prompt-panel.mid .cond-iconbox .pat{width:56px!important;height:56px!important}.prompt-panel.mid .cond-iconbox .exact-icon{width:60px!important;height:60px!important}.prompt-panel.mid .cond-iconbox .exact-icon svg{width:56px!important;height:56px!important}.prompt-panel.mid .cond-iconbox .crayon{width:58px!important;height:42px!important}
+.prompt-panel.dense .cond-chip{width:58px;min-width:58px}.prompt-panel.dense .cond-label{max-width:60px;font-size:10px}.prompt-panel.dense .cond-iconbox{width:54px;height:54px}.prompt-panel.dense .cond-iconbox .token-icon,.prompt-panel.dense .cond-iconbox .token-icon svg{width:52px!important;height:52px!important}.prompt-panel.dense .cond-iconbox .pat{width:50px!important;height:50px!important}.prompt-panel.dense .cond-iconbox .exact-icon{width:54px!important;height:54px!important}.prompt-panel.dense .cond-iconbox .exact-icon svg{width:50px!important;height:50px!important}.prompt-panel.dense .cond-iconbox .crayon{width:52px!important;height:38px!important}.prompt-panel.dense .logic-op{margin-top:22px;font-size:20px}.prompt-panel.dense .logic-op.or-word{margin-top:20px;font-size:10px;padding:3px 5px}
+
+/* お題を大きくした分だけプレイエリアを少し下へ */
+.self-board{top:347px!important;height:445px!important}
+.rival-board{top:405px!important;height:286px!important}
+
+/* 給料ボーナス：ゲーム内のアクションとして認識できる大きさ・意味にする */
+.bonus-wrap{
+  position:absolute!important;z-index:9;left:1168px!important;top:654px!important;right:auto!important;bottom:auto!important;
+  width:126px!important;height:126px!important;min-width:0!important;padding:0!important;border:0!important;background:transparent!important;
+  box-shadow:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:3px!important;
+  transform:none!important;
+}
+.bonus-title{font-size:13px!important;line-height:1!important;color:#765400!important;font-weight:1000!important;white-space:nowrap!important}
+.bonus-token{
+  position:relative!important;width:94px!important;height:94px!important;border-radius:50%!important;border:6px solid #e2a500!important;
+  background:radial-gradient(circle at 35% 26%,#fff8cf 0 18%,#ffd94f 48%,#f0af00 100%)!important;
+  box-shadow:0 6px 12px rgba(112,72,0,.24),inset 0 -7px 0 rgba(159,103,0,.16)!important;overflow:visible!important;
+}
+.bonus-token:before{content:"+3"!important;position:absolute!important;inset:auto!important;left:0!important;right:0!important;top:39px!important;text-align:center!important;font-size:31px!important;line-height:1!important;color:#784e00!important;font-weight:1000!important;white-space:nowrap!important;display:block!important}
+.bonus-token:after{content:"給料"!important;position:absolute;left:50%;top:17px;transform:translateX(-50%);font-size:13px;line-height:1;font-weight:1000;color:#805400;background:#fff8d0;border:1px solid rgba(154,100,0,.25);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.claim-status{font-size:10px!important;line-height:1.05!important;color:#6f571c!important;font-weight:1000!important;text-align:center!important;white-space:nowrap!important}
+body[data-mode="cpu"] .bonus-token .claim-a{display:none!important}
+body[data-mode="cpu"] .bonus-token .claim-b{display:block!important;left:0!important;top:0!important;bottom:auto!important;width:100%!important;height:100%!important;border-radius:50%!important;z-index:12!important}
+body[data-mode="cpu"] .bonus-token:has(.claim-b.enabled){animation:bonusPulse 1.05s ease-in-out infinite}
+@keyframes bonusPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
 </style>
 </head>
 <body data-mode="menu">
@@ -1094,12 +1170,12 @@ body.game-running .game-fit{width:100%!important;height:100%!important;overflow:
       </aside>
 
       <div class="bonus-wrap" id="bonusWrap">
-        <div class="bonus-title">給料ボーナス</div>
+        <div class="bonus-title">先着ボーナス</div>
         <div class="bonus-token" id="bonusToken">
           <button class="claim-half claim-a" data-claim="A" aria-label="相手がトークンを取る" disabled></button>
           <button class="claim-half claim-b" data-claim="B" aria-label="あなたがトークンを取る" disabled></button>
         </div>
-        <div class="claim-status" id="claimStatus">終了後に取る</div>
+        <div class="claim-status" id="claimStatus">終了宣言後にタップ</div>
       </div>
 
       <div class="finish-marquee" id="finishMarquee" aria-live="polite"><div class="finish-marquee-text" id="finishMarqueeText"></div></div>
@@ -1283,21 +1359,45 @@ function typeSvg(type,color='#59616d',pattern='plain',fullColor=null){
 }
 function patternHtml(p){return `<span class="pat ${p}"></span>`}
 function crayonHtml(c){return `<span class="crayon ${c}"><i></i><i></i><i></i></span>`}
-function miniTypeHtml(t){return `<span class="token-icon">${typeSvg(t,'#59616d','plain')}</span>`}
+function typeIconSvg(type){
+  const fill='#5c6572';
+  if(type==='shirt') return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M31 22L42 14Q50 22 58 14L69 22L83 18L91 39L75 48V86H25V48L9 39L17 18Z" fill="${fill}"/></svg>`;
+  if(type==='pants') return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M27 12H73L78 87H57L50 50L43 87H22Z" fill="${fill}"/></svg>`;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 15H44V48C44 62 34 77 18 85C8 90 2 81 8 71L22 55Z" fill="${fill}"/><path d="M57 21H79V52C79 65 70 78 55 85C46 89 39 80 44 71L57 57Z" fill="${fill}"/></svg>`;
+}
+function miniTypeHtml(t){return `<span class="token-icon">${typeIconSvg(t)}</span>`}
 function fullExactHtml(c,t,p){return `<span class="exact-icon">${typeSvg(t,COLORS[c],p,COLORS[c])}</span>`}
-
-function renderCond(cond){
-  switch(cond.kind){
-    case 'color': return crayonHtml(cond.value);
-    case 'type': return miniTypeHtml(cond.value);
-    case 'pattern': return patternHtml(cond.value);
-    case 'exact': return fullExactHtml(cond.color,cond.type,cond.pattern);
-    case 'not': return `<span class="not-wrap negative">${renderCond(cond.arg)}<i class="neg-line neg-line-a"></i><i class="neg-line neg-line-b"></i></span>`;
-    case 'and': return cond.args.map(renderCond).join('<span class="op">＋</span>');
-    case 'or': return `<span class="icon-seq">${cond.args.map(renderCond).join('<span class="or">または</span>')}</span>`;
-    case 'exactAny': return `<span class="icon-seq">${cond.args.map(renderCond).join('<span class="or">/</span>')}</span>`;
-  }
+function atomIcon(cond){
+  if(cond.kind==='color') return crayonHtml(cond.value);
+  if(cond.kind==='type') return miniTypeHtml(cond.value);
+  if(cond.kind==='pattern') return patternHtml(cond.value);
+  if(cond.kind==='exact') return fullExactHtml(cond.color,cond.type,cond.pattern);
   return '';
+}
+function atomLabel(cond){
+  if(cond.kind==='color') return JP_COLOR[cond.value];
+  if(cond.kind==='type') return JP_TYPE[cond.value];
+  if(cond.kind==='pattern') return JP_PATTERN[cond.value];
+  if(cond.kind==='exact') return `${JP_COLOR[cond.color]}・${JP_TYPE[cond.type]}・${JP_PATTERN[cond.pattern]}`;
+  return '';
+}
+function renderAtom(cond,negative=false){
+  const label=(negative?atomLabel(cond)+'ではない':atomLabel(cond));
+  return `<span class="cond-chip${negative?' negative':''}"><span class="cond-iconbox">${atomIcon(cond)}</span><span class="cond-label">${esc(label)}</span></span>`;
+}
+function renderCond(cond){
+  if(['color','type','pattern','exact'].includes(cond.kind)) return renderAtom(cond,false);
+  if(cond.kind==='not') return renderAtom(cond.arg,true);
+  if(cond.kind==='and') return `<span class="logic-group">${cond.args.map(renderCond).join('<span class="logic-op">＋</span>')}</span>`;
+  if(cond.kind==='or') return `<span class="logic-group">${cond.args.map(renderCond).join('<span class="logic-op or-word">または</span>')}</span>`;
+  if(cond.kind==='exactAny') return `<span class="logic-group">${cond.args.map(renderCond).join('<span class="logic-op or-word">または</span>')}</span>`;
+  return '';
+}
+function conditionLeafCount(cond){
+  if(['color','type','pattern','exact'].includes(cond.kind)) return 1;
+  if(cond.kind==='not') return conditionLeafCount(cond.arg);
+  if(cond.args) return cond.args.reduce((n,x)=>n+conditionLeafCount(x),0);
+  return 1;
 }
 function condText(cond){
   switch(cond.kind){
@@ -1310,7 +1410,9 @@ function condText(cond){
   }
 }
 function promptRow(point,cond){
-  return `<div class="prompt-panel panel${point}">
+  const leaves=conditionLeafCount(cond);
+  const density=leaves>=4?'dense':(leaves>=3?'mid':'simple');
+  return `<div class="prompt-panel panel${point} ${density}">
     <div class="prompt-panel-head">${point}点 の条件</div>
     <div class="prompt-panel-body">
       <div class="prompt-icons">${renderCond(cond)}</div>
